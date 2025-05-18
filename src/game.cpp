@@ -4,14 +4,7 @@
 #include <FastLED.h>
 #include <math.h>
 
-#include "Game.h";
-
-Game::Game() {
-  accelX, accelY = 0;
-  // todo: replace with level starting pt
-  posX = MAX_X / 2;
-  posY = MAX_Y / 2;
-}
+#include "Game.h"
 
 const double WEIGHT = 10;
 const double GRAVITY = 9;
@@ -19,6 +12,14 @@ const double FRICTION_COEFFICIENT = 0.03;
 const int MAX_X = 6000;
 const int MAX_Y = 50000;
 
+Game game;
+
+Game::Game() {
+  accelX, accelY = 0;
+  // todo: replace with level starting pt
+  posX = MAX_X / 2;
+  posY = MAX_Y / 2;
+}
 
 void Game::updateAccel(double beta, double gamma) {
     double betaRad = (beta * M_PI) / 180.0;

@@ -9,7 +9,6 @@
 CRGB leds[NUM_LEDS];
 
 ControlServer *server;
-Game *game;
 
 void setup(){
   // Serial port for debugging purposes
@@ -17,10 +16,8 @@ void setup(){
 
   Serial.println("Starting up");
 
-  game = new Game();
-  server = new ControlServer(game);
+  server = new ControlServer();
   server->connect();
-
 
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);  // GRB ordering is assumed
   // FastLED.setBrightness(80);
@@ -31,9 +28,9 @@ int increment = 1;
 void loop() {
   server->cleanupWSClients();
 
-  game->update();
+  game.update();
+  game.draw(leds);
   // level->draw();
-  game->draw();
 
   FastLED.clear();
   FastLED.show();

@@ -1,3 +1,7 @@
+#pragma once
+
+#include <FastLED.h>
+
 class Game{
   public:
     Game();
@@ -14,3 +18,5 @@ class Game{
     int y();
     unsigned long time;
 };
+
+extern Game game;
