@@ -69,11 +69,16 @@ void ControlServer::connect() {
   });
 
   // ws->onEvent(onEvent);
-  wsHandler->onMessage([](AsyncWebSocket *server, AsyncWebSocketClient *client, const uint8_t *data, size_t len) {
-    // Serial.printf("Client %" PRIu32 " data: %s\n", client->id(), (const char *)data);
-    game.updateAccel(1, 1); // TODO
-  });
   // server->addHandler(ws);
+
+  Serial.println("setting up web sockets");
+  // ERROR
+  // wsHandler->onMessage([](AsyncWebSocket *server, AsyncWebSocketClient *client, const uint8_t *data, size_t len) {
+  //   // Serial.printf("Client %" PRIu32 " data: %s\n", client->id(), (const char *)data);
+
+  //   // game.updateAccel(1, 1); // TODO
+  // });
+  Serial.println("done");
 
   server->begin();
 }
