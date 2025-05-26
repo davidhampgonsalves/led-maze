@@ -3,11 +3,6 @@
 class ControlServer {
   public:
     ControlServer();
-    void cleanupWSClients();
+    void cleanupWsClients();
     void connect();
-    void onEvent(AsyncWebSocket*, AsyncWebSocketClient*, AwsEventType , void*, uint8_t*, size_t);
-  private:
-    AsyncWebServer *server;
-    AsyncWebSocket *ws;
-    AsyncWebSocketMessageHandler *wsHandler;
 };

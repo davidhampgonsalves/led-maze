@@ -3,6 +3,8 @@
 
 #include "ControlServer.h"
 #include "Game.h"
+#include "text.h"
+#include "state.h"
 
 #define NUM_LEDS 300
 #define DATA_PIN 14
@@ -24,17 +26,41 @@ void setup(){
   Serial.println("Start up complete");
 }
 
-void loop() {
-  // server->cleanupWSClients();
+static uint32_t lastWS = 0;
+static uint32_t deltaWS = 2000;
+static unsigned long time;
 
-  // game.update();
+void title(unsigned long elapsed) {
+  write("maze", leds);
+}
 
-  // FastLED.clear();
+void title(unsigned long elapsed) {
+  if(elapsed < WORD_WAIT) write("get", leds);
+  else if(elapsed < WORD_WAIT * 2) write("ready", leds);
+  else updateState(PLAYING);
+}
 
+void play(unsigned long elapsed) {
+  game.update(elapsed);
   game.draw(leds);
   // level->draw();
+}
 
-  FastLED.show();
+void loop() {
+  unsigned long now = millis();
+  int elapsed = now - time;
+  FastLED.clear();
+
+  if (elapsed >= deltaWS) {
+    server->cleanupWsClients();
+    lastWS = millis();
+  }
+
+  if(state == TITLE) title(elapsed);
+  if(state == GAME_START) game_start(elapsed);
+  if(state == PLAYING) play(elapsed);
 
   // delay(30); // TODO: maintain FPS
+  FastLED.show();
+  time = now;
 }

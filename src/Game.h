@@ -6,17 +6,17 @@ class Game{
   public:
     Game();
     void updateAccel(double, double);
-    void update();
+    void update(int elapsed);
     void draw(CRGB leds[]);
   private:
-    int accelX;
-    int accelY;
-    int posX;
-    int posY;
+    int accelX, accelY;
+    int posX, posY;
+    int velX, velY;
+    int lastX, lastY;
+    int x, y;
 
-    int x();
-    int y();
-    unsigned long time;
+    int calcX();
+    int calcY();
 };
 
 extern Game game;
