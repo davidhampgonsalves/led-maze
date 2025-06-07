@@ -1,0 +1,165 @@
+<html>
+    <head>
+      <style>
+        body {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+
+        #start {
+          padding: 1em;
+          margin: 1em;
+          height: 10em;
+          margin: 1em;
+          font-size: 2em;
+        }
+
+        #position {
+          background: black;
+          color: green;
+          width: fit-content;
+          padding: 0.5em;
+          margin: 1em;
+        }
+
+        #console {
+          background: black;
+          color: green;
+          padding: 1em;
+          max-height: 50%;
+          font-size: 0.8em;
+          font-family: monospace;
+          overflow-y: auto;
+        }
+
+        #debug {
+          padding: 1em;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5em;
+          visibility: hidden;
+        }
+      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    </head>
+    <body>
+      <button id="start">Start</button>
+
+      <div id="position">...</div>
+
+      <div id="console">
+        # Console
+      </div>
+
+      <div id="debug">
+        <h2>debug</h2>
+        <input id="accel" placeholder="acceleration" />
+        <input id="friction" placeholder="friction" />
+        <input id="gravity" placeholder="gravity" />
+      </div>
+
+      <script type="module">
+        let wakeLock = null;
+
+        async function ensureDevicePermissions() {
+          if (typeof DeviceOrientationEvent.requestPermission !== "function") return;
+
+          await DeviceOrientationEvent.requestPermission().then((state) => {
+            if (state === "granted") return;
+
+            console.error("You must grant permission for sensor data to play");
+          });
+        };
+
+        async function requestWakeLock() {
+          try {
+            wakeLock = await navigator.wakeLock.request("screen");
+          } catch (err) {
+            alert(`${err.name}, ${err.message}`);
+          }
+        }
+
+        const gateway = `wss://maze.davidhampgonsalves.com:9000/ws`;
+        let websocket;
+        function initWebSocket() {
+          console.log('Trying to open a WebSocket connection...');
+          websocket = new WebSocket(gateway);
+          websocket.onopen    = onOpen;
+          websocket.onclose   = onClose;
+          websocket.onmessage = onMessage;
+        }
+        function onOpen(event) {
+          console.log('Connection opened');
+        }
+        function onClose(event) {
+          console.log('Connection closed');
+          setTimeout(initWebSocket, 500);
+        }
+        function onMessage(event) {
+          console.log("onMessage:", event.data)
+        }
+
+
+
+        const consoleEl = document.querySelector("#console");
+        function log(...args) {
+          const el = document.createElement('div');
+          el.innerText = args.join(", ");
+          consoleEl.appendChild(el);
+        }
+        console.log = log
+        console.error = log
+
+        const positionEl = document.querySelector("#position");
+        const formatNumber = (n) => String(Math.round(n)).padStart(3, '0');
+        let lastSendTime = 0;
+        function handleOrientationEvent(event) {
+          positionEl.innerHTML = formatNumber(event.beta) + " / " + formatNumber(event.gamma);
+
+          if(event.beta == null) {
+            console.log("beta not set");
+            return;
+          }
+
+          const now = Date.now();
+          if (now - lastSendTime >= 300) {
+            lastSendTime = now;
+            //console.log("sending");
+            websocket.send("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
+          }
+        }
+
+        async function start(e) {
+          await ensureDevicePermissions();
+          await requestWakeLock();
+          document.body.removeChild(e.target);
+
+          window.addEventListener('deviceorientation', handleOrientationEvent);
+
+          initWebSocket();
+
+          document.querySelector("#debug").style.visibility = 'visible'
+        }
+
+        function handleSettingChange() {
+          const value = event.target.value.trim();
+          if(value == "") return;
+
+          console.log("sending" + event.target.id + ":" + value);
+          websocket.send(event.target.id + ":" + value);
+
+        }
+
+        document.querySelector("#start").addEventListener("click", start);
+        document.addEventListener("visibilitychange", async () => {
+          if (wakeLock !== null && document.visibilityState === "visible") {
+            wakeLock = await navigator.wakeLock.request("screen");
+          }
+        });
+
+        document.querySelectorAll("#debug input").forEach(e => e.addEventListener("blur", handleSettingChange));
+      </script>
+    </body>
+    </html>
+    <script>

@@ -1,9 +1,18 @@
-const int TITLE = 0;
-const int GAME_START = 1;
-const int PLAYING = 2;
-const int HIGHSCORE = 3;
-const int DEMO = 4;
+#pragma once
 
-static int state = TITLE;
+enum State {
+  TITLE,
+  GAME_START,
+  GAME_END,
+  PLAYING,
+  LEVEL_START,
+  LEVEL_END,
+  PLAYING_DEAD,
+  HIGH_SCORE,
+  HIGH_SCORES,
+  DEMO,
+};
 
-void updateState(int s) { state = s; };
+void updateState(State s);
+unsigned long getStateStart();
+State curState();

@@ -1,14 +1,12 @@
-extern int MAX_X;
-extern int MAX_Y;
+#pragma once
 
-void setLed(int x, int y, CHSV c, CRGB leds[]) {
-  if(x % 2 == 1) y = MAX_Y - y - 1;
+#include <FastLED.h>
 
-  c.value = dim8_lin(c.value); // gamma correction
+const int MAX_X = 6;
+const int MAX_Y = 50;
+const int MAX_PX = MAX_X * MAX_Y;
 
-  // Serial.print("setLed for ");
-  // Serial.print(x);
-  // Serial.print(" is ");
-  // Serial.println(x * MAX_Y + y);
-  leds[x * MAX_Y + y] = c;
-}
+void setLed(int x, int y, CHSV c, CRGB leds[]);
+void setLed(int x, int y, CRGB c, CRGB leds[]);
+int indexToPos(int xy);
+CRGB colorAt(int x, int y, CRGB leds[]);

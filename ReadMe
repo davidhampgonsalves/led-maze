@@ -2,4 +2,14 @@
 
 ### Squares
 * fast / slow
-*
+* portals - map pixels based on discover order, reorient velocity based on portal direction
+* breakable
+* lava (shimmer?)
+* easter eggs
+* secret squares (do not display till you are on adjacent pixel)
+
+decalf 18.5 45 out in 20-23s
+
+
+
+

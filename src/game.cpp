@@ -1,117 +1,192 @@
-#include <cmath>
-#include <vector>
 #include <Arduino.h>
 #include <FastLED.h>
-#include <math.h>
-#include <common.h>
+#include <cmath>
 #include <colors.h>
+#include <common.h>
+#include <math.h>
+#include <state.h>
+#include <vector>
 
 #include "Game.h"
+#include "Level.h"
 
 const int GAME_MAX_X = 6000;
 const int GAME_MAX_Y = 50000;
+const double BOUNCE = 0.6;
 
-Game game;
+Game game; // global game
 
 Game::Game() {
+  GRAVITY = 9.81;
+  FRICTION = 0.002;
+  ACCEL_DIVISOR = 160;
+  TERM_VELOCITY = 50;
+}
+
+void Game::start(int lvl) {
+  level = new Level(lvl);
   accelX, accelY = 0;
-  // todo: replace with level starting pt
-  posX = 3000;
-  posY = 4000;
+
+  score = 0;
+
+  posX = indexToPos(level->startX);
+  posY = indexToPos(level->startY);
+  x = calcX();
+  y = calcY();
+
   velX = 0;
   velY = 0;
 }
 
-const double GRAVITY = 9.81;  // m/s²
 void Game::updateAccel(double beta, double gamma) {
-    double betaRad = beta * M_PI / 180.0;
-    double gammaRad = gamma * M_PI / 180.0;
+  double betaRad = beta * M_PI / 180.0;
+  double gammaRad = gamma * M_PI / 180.0;
 
-    accelY = -static_cast<int>(GRAVITY * sin(betaRad)) * 5;
-    accelX = static_cast<int>(GRAVITY * sin(gammaRad)) * 5;
-
-    // Serial.printf("accel x: %d, y: %d\n", accelX, accelY);
+  accelY = -1 * GRAVITY * sin(betaRad) / ACCEL_DIVISOR;
+  accelX = GRAVITY * sin(gammaRad) / (ACCEL_DIVISOR + 10);
 }
 
-// TODO: pass in elapsed from main loop
-void Game::update(int elapsed) {
-  // TODO: need to add velocityX/Y and add accel to that and that is what gets added to pos
-  // Does friction reduce velocity?
-  // apply current accel to posX/Y
+double Game::applyFriction(unsigned long elapsed, double vel) {
+  double fric = elapsed * FRICTION * (vel > 0 ? -1 : 1);
+  double nextVel = vel + fric;
 
-  velX = elapsed * accelX;
-  velY = elapsed * accelY;
+  if ((vel >= 0 && nextVel < 0) || (vel < 0 && nextVel > 0))
+    return 0;
+
+  return vel + fric;
+}
+
+void Game::update(int elapsed) {
+  if (curState() != PLAYING)
+    return;
+
+  level->update(elapsed);
+
+  velX = applyFriction(elapsed, velX);
+  velY = applyFriction(elapsed, velY);
+
+  velX += elapsed * accelX;
+  velY += elapsed * accelY;
+
+  if(velX > TERM_VELOCITY) velX = TERM_VELOCITY;
+  if(velX < -TERM_VELOCITY) velX = -TERM_VELOCITY;
+  if(velY > TERM_VELOCITY) velY = TERM_VELOCITY;
+  if(velY < -TERM_VELOCITY) velY = -TERM_VELOCITY;
+
+  int prevX = x;
+  int prevY = y;
+  double prevPosX = posX;
+  double prevPosY = posY;
+
   posX = posX + elapsed * velX;
   posY = posY + elapsed * velY;
-
-  // TODO: this needs to be generalized for wall detection
-  // track lastX/Y and when this update will cause a change
-  // do this check
-  if(posX < 0 || posX > GAME_MAX_X-1000) {
-    if(posX < 0) posX = 0;
-    else posX = GAME_MAX_X-1000;
-    velX = -0.6 * velX;
-  }
-  if(posY < 0 || posY > GAME_MAX_Y-1000) {
-    if(posY < 0) posY = 0;
-    else posY = GAME_MAX_Y-1000;
-    velY = -0.6 * velY;
-  }
-
   x = calcX();
   y = calcY();
 
-  Serial.printf("pos x: %d, y: %d\n", posX, posY);
+  checkCollisions(prevX, prevY, prevPosX, prevPosY);
 }
 
-const int ADJ_LED_MAX_BRT = 100;
-void Game::draw(CRGB leds[]) {
-  double xRemainder = static_cast<double>(posX) / 1000 - x;
-  double yRemainder = static_cast<double>(posY) / 1000 - y;
-  int adjX = xRemainder < 0.5 ? -1 : 1;
-  int adjY = yRemainder < 0.5 ? -1 : 1;
+void Game::checkCollisions(int prevX, int prevY, double prevPosX,
+                           double prevPosY) {
+  int px = level->at(x, y);
+  int prevPx = level->at(prevX, prevY);
 
+  if (x == prevX && y == prevY && px == prevPx)
+    return; // nothing has changed
 
-  // adjacent ball pixels
-  // setLed(xIndex, yIndex, CHSV(BALL_H, BALL_S, 150), leds);
-  // setLed(xIndex + adjX, yIndex, CHSV(BALL_H, BALL_S, ADJ_LED_MAX_BRT * xRemainder), leds);
-  // setLed(xIndex, yIndex + adjY, CHSV(BALL_H, BALL_S, ADJ_LED_MAX_BRT * yRemainder), leds);
-  // setLed(xIndex + adjX,  yIndex + adjY, CHSV(BALL_H, BALL_S, ADJ_LED_MAX_BRT * (xRemainder + yRemainder) / 3), leds);
-
-  // Serial.print("pos: ");
-  // Serial.print(xIndex);
-  // Serial.print(", ");
-  // Serial.print(yIndex);
-  // Serial.print(" - ");
-  // Serial.print(xRemainder);
-  // Serial.print(", ");
-  // Serial.println(yRemainder);
-
-  // Serial.print("led: ");
-  // Serial.print(xIndex * MAX_Y + yIndex);
-  // Serial.print(", ");
-  // Serial.print(((xIndex + adjX) * MAX_Y) + yIndex);
-  // Serial.print(", ");
-  // Serial.print((xIndex * MAX_Y) + (yIndex + adjY));
-  // Serial.print(", ");
-  // Serial.println(((xIndex + adjX) * MAX_Y) + (yIndex + adjY));
-
-  // display fade example row
-  // int c = 10;
-  // for(int x = 0 ; x < 6 ; x++) {
-  //   for(int y = 0 ; y < MAX_Y ; y += 1) {
-  //     setLed(x, y, CHSV(BALL_H, BALL_S, c), leds);
-  //     c += 10;
-  //     if(c > 255) return;
-  //   }
-  // }
+  // TODO: need to handle portal, impact, kill, bouncy wall
+  // TODO: can you be crushed?
+  switch (px) {
+  case EMPTY:
+    checkDiags(prevX, prevY);
+    break;
+  case WALL:
+    if (x != prevX) {
+      x = prevX;
+      posX = prevPosX;
+      velX = -BOUNCE * velX;
+    }
+    if (y != prevY) {
+      y = prevY;
+      posY = prevPosY;
+      velY = -BOUNCE * velY;
+    }
+    break;
+  case FINISH:
+    updateState(LEVEL_END);
+    break;
+  case FIRE:
+    updateState(PLAYING_DEAD);
+    break;
+  }
 }
 
+void Game::checkDiags(int prevX, int prevY) {
+  // need to check diags to see if allowed
+  if (x == prevX || y == prevY)
+    return; // not diag
 
-int Game::calcX() {
-  return round(posX / 1000);
+  int adjX = (x > prevX ? -1 : 1) + x;
+  int adjY = (y > prevY ? -1 : 1) + y;
+  if (level->at(adjX, y) == WALL && level->at(x, adjY) == WALL) {
+    x = prevX;
+    velX = -BOUNCE * velX;
+
+    y = prevY;
+    velY = -BOUNCE * velY;
+  }
 }
 
-int Game::calcY() {
-  return round(posY / 1000);
+void Game::draw(unsigned long elapsed, CRGB leds[]) {
+  level->draw(leds);
+
+  setLed(x, y, BALL_COLOR, leds);
+
+  switch (curState()) {
+  case (LEVEL_START):
+    levelStart(elapsed, leds);
+    break;
+  case (LEVEL_END):
+    levelEnd(elapsed, leds);
+    break;
+  case (PLAYING_DEAD):
+    updateState(PLAYING);
+    start(level->levelNum);
+    break;
+  };
 }
+
+void Game::levelStart(unsigned long elapsed, CRGB leds[]) {
+  setLed(x, y, BLACK, leds);
+  if (elapsed < 1000) {
+    setLed(x + 2, y, START_BURST, leds);
+    setLed(x - 2, y, START_BURST, leds);
+    setLed(x, y + 2, START_BURST, leds);
+    setLed(x, y - 2, START_BURST, leds);
+
+    setLed(x + 1, y + 1, START_BURST, leds);
+    setLed(x + 1, y - 1, START_BURST, leds);
+    setLed(x - 1, y + 1, START_BURST, leds);
+    setLed(x - 1, y - 1, START_BURST, leds);
+  } else if (elapsed < 1500) {
+    setLed(x + 1, y, START_BURST, leds);
+    setLed(x - 1, y, START_BURST, leds);
+    setLed(x, y + 1, START_BURST, leds);
+    setLed(x, y - 1, START_BURST, leds);
+  } else if (elapsed < 2000) {
+    setLed(x, y, START_BURST, leds);
+  } else
+    updateState(PLAYING);
+}
+
+void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
+  if (level->levelNum >= LEVEL_COUNT)
+    updateState(GAME_END);
+  else {
+    updateState(LEVEL_START);
+    start(level->levelNum + 1);
+  }
+}
+
+int Game::calcX() { return round(posX / 1000); }
+int Game::calcY() { return round(posY / 1000); }
