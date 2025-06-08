@@ -31,8 +31,8 @@ void Game::start(int lvl) {
 
   posX = indexToPos(level->startX);
   posY = indexToPos(level->startY);
-  x = calcX();
-  y = calcY();
+  x = posToIndex(posX);
+  y = posToIndex(posY);
 
   velX = 0;
   velY = 0;
@@ -68,10 +68,14 @@ void Game::update(int elapsed) {
   velX += elapsed * accelX;
   velY += elapsed * accelY;
 
-  if(velX > TERM_VELOCITY) velX = TERM_VELOCITY;
-  if(velX < -TERM_VELOCITY) velX = -TERM_VELOCITY;
-  if(velY > TERM_VELOCITY) velY = TERM_VELOCITY;
-  if(velY < -TERM_VELOCITY) velY = -TERM_VELOCITY;
+  if (velX > TERM_VELOCITY)
+    velX = TERM_VELOCITY;
+  if (velX < -TERM_VELOCITY)
+    velX = -TERM_VELOCITY;
+  if (velY > TERM_VELOCITY)
+    velY = TERM_VELOCITY;
+  if (velY < -TERM_VELOCITY)
+    velY = -TERM_VELOCITY;
 
   int prevX = x;
   int prevY = y;
@@ -80,8 +84,8 @@ void Game::update(int elapsed) {
 
   posX = posX + elapsed * velX;
   posY = posY + elapsed * velY;
-  x = calcX();
-  y = calcY();
+  x = posToIndex(posX);
+  y = posToIndex(posY);
 
   checkCollisions(prevX, prevY, prevPosX, prevPosY);
 }
@@ -97,28 +101,58 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX,
   // TODO: need to handle portal, impact, kill, bouncy wall
   // TODO: can you be crushed?
   switch (px) {
-  case EMPTY:
-    checkDiags(prevX, prevY);
-    break;
-  case WALL:
-    if (x != prevX) {
-      x = prevX;
-      posX = prevPosX;
-      velX = -BOUNCE * velX;
-    }
-    if (y != prevY) {
-      y = prevY;
-      posY = prevPosY;
-      velY = -BOUNCE * velY;
-    }
-    break;
-  case FINISH:
-    updateState(LEVEL_END);
-    break;
-  case FIRE:
-    updateState(PLAYING_DEAD);
-    break;
+    case EMPTY:
+      checkDiags(prevX, prevY);
+      break;
+    case WALL:
+      wall(prevX, prevY, prevPosX, prevPosY);
+      break;
+    case FINISH:
+      updateState(LEVEL_END);
+      break;
+    case FIRE:
+      updateState(PLAYING_DEATH);
+      break;
+    case PORTAL:
+      bool canWarp = warp(prevX, prevY);
+      if(!canWarp) wall(prevX, prevY, prevPosX, prevPosY);
+      break;
   }
+}
+
+void Game::draw(unsigned long elapsed, CRGB leds[]) {
+  level->draw(leds);
+
+  setLed(x, y, BALL_COLOR, leds);
+
+  switch (curState()) {
+    case (LEVEL_START):
+      levelStart(elapsed, leds);
+      break;
+    case (LEVEL_END):
+      levelEnd(elapsed, leds);
+      break;
+    case (PLAYING_DEATH):
+      death(elapsed, leds);
+      break;
+  };
+}
+
+void Game::levelStart(unsigned long elapsed, CRGB leds[]) {
+  animateRing(elapsed, START_BURST, PLAYING, false, x, y, leds);
+}
+
+void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
+  if (level->levelNum >= LEVEL_COUNT)
+    updateState(GAME_END);
+  else {
+    updateState(LEVEL_START);
+    start(level->levelNum + 1);
+  }
+}
+
+void Game::death(unsigned long elapsed, CRGB leds[]) {
+  animateRing(elapsed, DEATH_BURST, DEAD, true, x, y, leds);
 }
 
 void Game::checkDiags(int prevX, int prevY) {
@@ -137,56 +171,39 @@ void Game::checkDiags(int prevX, int prevY) {
   }
 }
 
-void Game::draw(unsigned long elapsed, CRGB leds[]) {
-  level->draw(leds);
-
-  setLed(x, y, BALL_COLOR, leds);
-
-  switch (curState()) {
-  case (LEVEL_START):
-    levelStart(elapsed, leds);
-    break;
-  case (LEVEL_END):
-    levelEnd(elapsed, leds);
-    break;
-  case (PLAYING_DEAD):
-    updateState(PLAYING);
-    start(level->levelNum);
-    break;
-  };
-}
-
-void Game::levelStart(unsigned long elapsed, CRGB leds[]) {
-  setLed(x, y, BLACK, leds);
-  if (elapsed < 1000) {
-    setLed(x + 2, y, START_BURST, leds);
-    setLed(x - 2, y, START_BURST, leds);
-    setLed(x, y + 2, START_BURST, leds);
-    setLed(x, y - 2, START_BURST, leds);
-
-    setLed(x + 1, y + 1, START_BURST, leds);
-    setLed(x + 1, y - 1, START_BURST, leds);
-    setLed(x - 1, y + 1, START_BURST, leds);
-    setLed(x - 1, y - 1, START_BURST, leds);
-  } else if (elapsed < 1500) {
-    setLed(x + 1, y, START_BURST, leds);
-    setLed(x - 1, y, START_BURST, leds);
-    setLed(x, y + 1, START_BURST, leds);
-    setLed(x, y - 1, START_BURST, leds);
-  } else if (elapsed < 2000) {
-    setLed(x, y, START_BURST, leds);
-  } else
-    updateState(PLAYING);
-}
-
-void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
-  if (level->levelNum >= LEVEL_COUNT)
-    updateState(GAME_END);
-  else {
-    updateState(LEVEL_START);
-    start(level->levelNum + 1);
+void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
+  if (x != prevX) {
+    x = prevX;
+    posX = prevPosX;
+    velX = -BOUNCE * velX;
+  }
+  if (y != prevY) {
+    y = prevY;
+    posY = prevPosY;
+    velY = -BOUNCE * velY;
   }
 }
 
-int Game::calcX() { return round(posX / 1000); }
-int Game::calcY() { return round(posY / 1000); }
+bool Game::warp(int prevX, int prevY) {
+  Pt target = level->find(x, y, PORTAL);
+
+  int offsetX = x > prevX ? 501 : -501;
+  int offsetY = y > prevY ? 501 : -501;
+
+  unsigned long tmpXPos = indexToPos(target.x) + offsetX;
+  unsigned long tmpYPos = indexToPos(target.y) + offsetY;
+
+  if(level->at(posToIndex(tmpXPos), posToIndex(tmpYPos)) == EMPTY) {
+    updatePos(tmpXPos, tmpYPos);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void Game::updatePos(unsigned long newPosX, unsigned long newPosY) {
+  posX = newPosX;
+  posY = newPosY;
+  x = posToIndex(posX);
+  y = posToIndex(posY);
+}

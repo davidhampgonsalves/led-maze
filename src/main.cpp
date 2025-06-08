@@ -16,6 +16,8 @@ CRGB leds[NUM_LEDS];
 ControlServer *server;
 std::vector<HighScore> scores;
 Level *titleLevel = NULL;
+Level *deadLevel = NULL;
+
 
 void setup(){
   Serial.begin(115200);
@@ -39,6 +41,7 @@ void setup(){
   digitalWrite(RELAY_PIN, HIGH);
 
   titleLevel = new Level("/title.bmp");
+  deadLevel = new Level("/death.bmp");
 
   updateState(TITLE);
 
@@ -66,20 +69,26 @@ void gameEnd(unsigned long elapsed) {
 }
 
 void title(unsigned long elapsed) {
-  titleLevel->update(elapsed);
-  titleLevel->draw(leds);
-  return;
-
-  if(elapsed < 3000) {
+  if(elapsed < 5000) {
     titleLevel->update(elapsed);
     titleLevel->draw(leds);
   } else
     updateState(HIGH_SCORES);
 }
 
-int scoreIndex = 0;
-void highScores(unsigned long now) {
-  auto elapsed = now - getStateStart();
+void dead(unsigned long elapsed) {
+  if(elapsed > 1500) {
+    updateState(LEVEL_START);
+    game.start(game.level->levelNum);
+    return;
+  }
+
+  deadLevel->update(elapsed);
+  deadLevel->draw(leds);
+}
+
+static int scoreIndex = 0;
+void highScores(unsigned long elapsed) {
   if(elapsed < WORD_WAIT * 3) {
     if(elapsed < WORD_WAIT) {
       scoreIndex = 0;
@@ -101,8 +110,11 @@ void highScores(unsigned long now) {
   }
 }
 
-void play(uint interval, unsigned long elapsed) {
+void play(uint interval) {
   game.update(interval);
+
+  unsigned long now = millis();
+  auto elapsed = now - getStateStart(); // update can change state
 
   game.draw(elapsed, leds);
 }
@@ -124,7 +136,7 @@ void loop() {
       title(elapsed);
       break;
     case HIGH_SCORES:
-      highScores(now);
+      highScores(elapsed);
       break;
     case GAME_START:
       gameStart(elapsed);
@@ -132,11 +144,14 @@ void loop() {
     case GAME_END:
       gameEnd(elapsed);
       break;
+    case DEAD:
+      dead(elapsed);
+      break;
     case PLAYING:
-    case PLAYING_DEAD:
+    case PLAYING_DEATH:
     case LEVEL_START:
     case LEVEL_END:
-      play(interval, elapsed);
+      play(interval);
       break;
     default:
       Serial.println("ERROR: game state not handled.");

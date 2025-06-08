@@ -93,6 +93,20 @@ Px Level::at(int x, int y) {
     return FINISH;
   else if(c == FIRE_RGB)
     return FIRE;
+  else if(c == PORTAL_RGB)
+    return PORTAL;
   else
     return WALL;
+}
+
+Pt Level::find(int x, int y, Px px) {
+  for (int fY = 0; fY < MAX_Y; fY++) {
+    for (int fX = 0 ; fX < MAX_X; fX++) {
+      if(x == fX && y == fY) continue;
+
+      if(at(fX, fY) == px)
+        return Pt{fX, fY};
+    }
+  }
+  return Pt{ -1, -1 };
 }
