@@ -15,8 +15,8 @@ class Game{
     double FRICTION;
     double TERM_VELOCITY;
     int ACCEL_DIVISOR;
-    unsigned int score;
     Level *level;
+    int x, y;
   private:
     double applyFriction(unsigned long elapsed, double vel);
     void checkCollisions(int prevX, int prevY, double prevPosX, double prevPosY);
@@ -28,11 +28,13 @@ class Game{
     void wall(int prevX, int prevY, int prevPosX, int prevPosY);
     void updatePos(unsigned long newXPos, unsigned long newYPos);
 
+    unsigned long levelTimer;
+    unsigned int score;
+    unsigned int lives;
     double accelX, accelY;
     double velX, velY;
     int posX, posY;
     int lastX, lastY;
-    int x, y;
 };
 
 extern Game game;

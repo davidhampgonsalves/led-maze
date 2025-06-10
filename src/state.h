@@ -3,6 +3,7 @@
 enum State {
   TITLE,
   GAME_START,
+  GAME_OVER,
   GAME_END,
   PLAYING,
   PLAYING_DEATH,

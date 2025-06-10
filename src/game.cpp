@@ -5,6 +5,7 @@
 #include <common.h>
 #include <math.h>
 #include <state.h>
+#include <text.h>
 #include <vector>
 
 #include "Game.h"
@@ -27,7 +28,14 @@ void Game::start(int lvl) {
   level = new Level(lvl);
   accelX, accelY = 0;
 
-  score = 0;
+  if (lvl == 1) {
+    score = 0;
+    Serial.printf("setting initial score: %ld\n", score);
+    score += 100;
+    Serial.printf("after addition: %ld\n", score);
+    lives = 3;
+  }
+  levelTimer = 0;
 
   posX = indexToPos(level->startX);
   posY = indexToPos(level->startY);
@@ -56,17 +64,18 @@ double Game::applyFriction(unsigned long elapsed, double vel) {
   return vel + fric;
 }
 
-void Game::update(int elapsed) {
+void Game::update(int interval) {
   if (curState() != PLAYING)
     return;
 
-  level->update(elapsed);
+  levelTimer += interval;
+  level->update(interval);
 
-  velX = applyFriction(elapsed, velX);
-  velY = applyFriction(elapsed, velY);
+  velX = applyFriction(interval, velX);
+  velY = applyFriction(interval, velY);
 
-  velX += elapsed * accelX;
-  velY += elapsed * accelY;
+  velX += interval * accelX;
+  velY += interval * accelY;
 
   if (velX > TERM_VELOCITY)
     velX = TERM_VELOCITY;
@@ -82,8 +91,8 @@ void Game::update(int elapsed) {
   double prevPosX = posX;
   double prevPosY = posY;
 
-  posX = posX + elapsed * velX;
-  posY = posY + elapsed * velY;
+  posX = posX + interval * velX;
+  posY = posY + interval * velY;
   x = posToIndex(posX);
   y = posToIndex(posY);
 
@@ -101,40 +110,41 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX,
   // TODO: need to handle portal, impact, kill, bouncy wall
   // TODO: can you be crushed?
   switch (px) {
-    case EMPTY:
-      checkDiags(prevX, prevY);
-      break;
-    case WALL:
+  case EMPTY:
+    checkDiags(prevX, prevY);
+    break;
+  case WALL:
+    wall(prevX, prevY, prevPosX, prevPosY);
+    break;
+  case FINISH:
+    updateState(LEVEL_END);
+    break;
+  case FIRE:
+    updateState(PLAYING_DEATH);
+    break;
+  case PORTAL:
+    bool canWarp = warp(prevX, prevY);
+    if (!canWarp)
       wall(prevX, prevY, prevPosX, prevPosY);
-      break;
-    case FINISH:
-      updateState(LEVEL_END);
-      break;
-    case FIRE:
-      updateState(PLAYING_DEATH);
-      break;
-    case PORTAL:
-      bool canWarp = warp(prevX, prevY);
-      if(!canWarp) wall(prevX, prevY, prevPosX, prevPosY);
-      break;
+    break;
   }
 }
 
 void Game::draw(unsigned long elapsed, CRGB leds[]) {
-  level->draw(leds);
+  if (curState() == LEVEL_END)
+    return levelEnd(elapsed, leds);
+
+  level->draw(elapsed, leds);
 
   setLed(x, y, BALL_COLOR, leds);
 
   switch (curState()) {
-    case (LEVEL_START):
-      levelStart(elapsed, leds);
-      break;
-    case (LEVEL_END):
-      levelEnd(elapsed, leds);
-      break;
-    case (PLAYING_DEATH):
-      death(elapsed, leds);
-      break;
+  case (LEVEL_START):
+    levelStart(elapsed, leds);
+    break;
+  case (PLAYING_DEATH):
+    death(elapsed, leds);
+    break;
   };
 }
 
@@ -143,7 +153,23 @@ void Game::levelStart(unsigned long elapsed, CRGB leds[]) {
 }
 
 void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
-  if (level->levelNum >= LEVEL_COUNT)
+  if (elapsed == 0) {
+    score += 100;
+    // long timeBonus = (10000 - levelTimer) / 100;
+    // if (timeBonus > 0)
+    //   score += timeBonus;
+
+    Serial.printf("score set to:  %ld, %ld\n", score, levelTimer);
+  }
+
+  if (elapsed < 3000) {
+    if (elapsed < 1000) {
+      // Serial.printf("e: %ld, i: %ld, score: %ld\n", elapsed, interval, elapsed * interval);
+      // TODO: pass in fixed length
+      write((static_cast<double>(elapsed) / 1000) * score, leds);
+    } else
+      write(score, leds);
+  } else if (level->levelNum >= LEVEL_COUNT)
     updateState(GAME_END);
   else {
     updateState(LEVEL_START);
@@ -152,7 +178,11 @@ void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
 }
 
 void Game::death(unsigned long elapsed, CRGB leds[]) {
-  animateRing(elapsed, DEATH_BURST, DEAD, true, x, y, leds);
+  lives -= 1;
+  if (lives < 0)
+    updateState(GAME_OVER);
+  else
+    animateRing(elapsed, DEATH_BURST, DEAD, true, x, y, leds);
 }
 
 void Game::checkDiags(int prevX, int prevY) {
@@ -193,7 +223,7 @@ bool Game::warp(int prevX, int prevY) {
   unsigned long tmpXPos = indexToPos(target.x) + offsetX;
   unsigned long tmpYPos = indexToPos(target.y) + offsetY;
 
-  if(level->at(posToIndex(tmpXPos), posToIndex(tmpYPos)) == EMPTY) {
+  if (level->at(posToIndex(tmpXPos), posToIndex(tmpYPos)) == EMPTY) {
     updatePos(tmpXPos, tmpYPos);
     return true;
   } else {

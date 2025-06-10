@@ -1,19 +1,13 @@
-#include "Level.h"
-#include "file.h"
 #include <Arduino.h>
+#include <vector>
 #include <FastLED.h>
 #include <cmath>
+#include "Level.h"
+#include "file.h"
 #include <colors.h>
 #include <common.h>
 #include <math.h>
-#include <vector>
-
-
-// void printBinary(uint8_t num) {
-//     for (int i = sizeof(uint8_t) * 8 - 1; i >= 0; i--) {
-//         Serial.printf("%d", (num >> i) & 1);
-//     }
-// }
+#include <Game.h>
 
 Level::Level(int num) {
   levelNum = num;
@@ -55,31 +49,41 @@ void Level::load(const char* path) {
   }
 }
 
-void Level::update(int elapsed) {}
+void Level::update(int interval) {}
 
-void setFlicker(int x, int y, CRGB leds[]) {
-  if(random(10) > 8) return;
-  uint8_t r  = random(180, 255);
-  uint8_t g  = random(0, 100);
-  setLed(x, y, CRGB{ r, g, 0 }, leds);
-}
-
-void Level::draw(CRGB leds[]) {
+void Level::draw(unsigned long elapsed, CRGB leds[]) {
   for (int y = 0; y < MAX_Y; y++) {
     for (int x = 0; x < MAX_X; x++) {
       Px px = at(x, y);
-      if(px == EMPTY)
-        continue;
+      if(px == EMPTY) continue;
+
+      CRGB c = colorAt(x, y, level);
+      if(isHidden(c)) {
+        bool isClose = (x <= game.x + 1 && x >= game.x - 1 && y <= game.y + 1 && y >= game.y - 1);
+        if(!isClose) continue;
+      }
 
       if(px == FIRE) {
-        setFlicker(x, y, leds);
+        setFlameLed(x, y, leds);
         continue;
       }
 
-      CRGB c = colorAt(x, y, level);
+      if(px == PORTAL) {
+        setPortalLed(elapsed, x, y, leds);
+        continue;
+      }
+
+      if(px == WALL) c = HIDDEN_WALL_COLOR;
+
       setLed(x, y, c, leds);
     }
   }
+}
+
+bool Level::isHidden(CRGB c) {
+  if(c == H_FIRE_RGB || c == H_FINISH_RGB || c == H_PORTAL_RGB || c == H_WALL_RGB)
+    return true;
+  return false;
 }
 
 Px Level::at(int x, int y) {
@@ -89,14 +93,16 @@ Px Level::at(int x, int y) {
 
   if (c == EMPTY_RGB || c == START_RGB)
     return EMPTY;
-  else if(c == FINISH_RGB)
+  else if(c == FINISH_RGB || c == H_FINISH_RGB)
     return FINISH;
-  else if(c == FIRE_RGB)
+  else if(c == FIRE_RGB || c == H_FIRE_RGB)
     return FIRE;
-  else if(c == PORTAL_RGB)
+  else if(c == PORTAL_RGB || c == H_PORTAL_RGB)
     return PORTAL;
-  else
+  else if(c == H_WALL_RGB)
     return WALL;
+
+  return WALL;
 }
 
 Pt Level::find(int x, int y, Px px) {

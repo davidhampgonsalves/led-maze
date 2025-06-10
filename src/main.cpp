@@ -17,7 +17,7 @@ ControlServer *server;
 std::vector<HighScore> scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
-
+Level *winLevel = NULL;
 
 void setup(){
   Serial.begin(115200);
@@ -42,6 +42,7 @@ void setup(){
 
   titleLevel = new Level("/title.bmp");
   deadLevel = new Level("/death.bmp");
+  winLevel = new Level("/win.bmp");
 
   updateState(TITLE);
 
@@ -63,15 +64,25 @@ void gameStart(unsigned long elapsed) {
 }
 
 void gameEnd(unsigned long elapsed) {
-  if(elapsed < WORD_WAIT) write("you", leds);
-  else if(elapsed < WORD_WAIT * 2) write("win", leds);
+  if(elapsed > 1500) {
+    updateState(TITLE);
+    return;
+  }
+
+  winLevel->update(0);
+  winLevel->draw(elapsed, leds);
+}
+
+void gameOver(unsigned long elapsed) {
+  if(elapsed < WORD_WAIT) write("game", leds);
+  else if(elapsed < WORD_WAIT * 2) write("over", leds);
   else updateState(TITLE);
 }
 
 void title(unsigned long elapsed) {
   if(elapsed < 5000) {
-    titleLevel->update(elapsed);
-    titleLevel->draw(leds);
+    titleLevel->update(0);
+    titleLevel->draw(elapsed, leds);
   } else
     updateState(HIGH_SCORES);
 }
@@ -83,8 +94,8 @@ void dead(unsigned long elapsed) {
     return;
   }
 
-  deadLevel->update(elapsed);
-  deadLevel->draw(leds);
+  deadLevel->update(0);
+  deadLevel->draw(elapsed, leds);
 }
 
 static int scoreIndex = 0;
@@ -140,6 +151,9 @@ void loop() {
       break;
     case GAME_START:
       gameStart(elapsed);
+      break;
+    case GAME_OVER:
+      gameOver(elapsed);
       break;
     case GAME_END:
       gameEnd(elapsed);

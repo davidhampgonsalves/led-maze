@@ -71,7 +71,8 @@ void writeLetter(int charCode, int offset, CRGB leds[], const unsigned long long
 
 void write(const char * text, CRGB leds[]) {
   int len = strlen(text);
-  int textHeight = len * (FONT_SIZE + CHAR_OFFSET);
+  int letterMargin = len >= 5 ? 2 : CHAR_OFFSET;
+  int textHeight = len * (FONT_SIZE + letterMargin);
   int offset = (50 - textHeight) / 2;
   if(textHeight > 50) {
     offset = 0;
@@ -88,7 +89,7 @@ void write(const char * text, CRGB leds[]) {
     else
       Serial.printf("Do not have character def for %d\n", charCode);
 
-    offset += FONT_SIZE + CHAR_OFFSET;
+    offset += FONT_SIZE + letterMargin;
   }
 }
 

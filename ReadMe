@@ -1,14 +1,27 @@
-## Ideas
+## To do
+* corner deflections
+*[x] hidden squares
+* slow squares
+* movable squares?
+  * moving fire, bounces of walls?
+* score counting (level completion + time bonus)
+  * every level counts down for a set time and that adds to your score
+* score counting level end screen
+* high score saving
+* ~~breakable squares?~~
+* paper level map builder
+* sound hardware
+* sound software
+* color palate
+* controller website
 
-### Squares
-* fast / slow
-* portals - map pixels based on discover order, reorient velocity based on portal direction
-* breakable
-* lava (shimmer?)
-* easter eggs
-* secret squares (do not display till you are on adjacent pixel)
+
+bmp files are 6x60 24 bit color.
+
 
 decalf 18.5 45 out in 20-23s
+
+
 
 
 
