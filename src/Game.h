@@ -24,12 +24,13 @@ class Game{
     void levelStart(unsigned long elapsed, CRGB leds[]);
     void levelEnd(unsigned long elapsed, CRGB leds[]);
     void death(unsigned long elapsed, CRGB leds[]);
+    void loseLife(unsigned long elapsed, CRGB leds[]);
     bool warp(int prevX, int prevY);
     void wall(int prevX, int prevY, int prevPosX, int prevPosY);
     void updatePos(unsigned long newXPos, unsigned long newYPos);
 
     unsigned long levelTimer;
-    unsigned int score;
+    long score;
     unsigned int lives;
     double accelX, accelY;
     double velX, velY;

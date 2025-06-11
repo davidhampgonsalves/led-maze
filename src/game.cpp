@@ -5,6 +5,7 @@
 #include <common.h>
 #include <math.h>
 #include <state.h>
+#include <stdio.h>
 #include <text.h>
 #include <vector>
 
@@ -30,9 +31,6 @@ void Game::start(int lvl) {
 
   if (lvl == 1) {
     score = 0;
-    Serial.printf("setting initial score: %ld\n", score);
-    score += 100;
-    Serial.printf("after addition: %ld\n", score);
     lives = 3;
   }
   levelTimer = 0;
@@ -56,6 +54,8 @@ void Game::updateAccel(double beta, double gamma) {
 
 double Game::applyFriction(unsigned long elapsed, double vel) {
   double fric = elapsed * FRICTION * (vel > 0 ? -1 : 1);
+  if (level->isPx(x, y, SLOW))
+    fric *= 3;
   double nextVel = vel + fric;
 
   if ((vel >= 0 && nextVel < 0) || (vel < 0 && nextVel > 0))
@@ -107,7 +107,6 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX,
   if (x == prevX && y == prevY && px == prevPx)
     return; // nothing has changed
 
-  // TODO: need to handle portal, impact, kill, bouncy wall
   // TODO: can you be crushed?
   switch (px) {
   case EMPTY:
@@ -117,7 +116,7 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX,
     wall(prevX, prevY, prevPosX, prevPosY);
     break;
   case FINISH:
-    updateState(LEVEL_END);
+    updateState(PLAYING_LEVEL_END);
     break;
   case FIRE:
     updateState(PLAYING_DEATH);
@@ -131,15 +130,18 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX,
 }
 
 void Game::draw(unsigned long elapsed, CRGB leds[]) {
-  if (curState() == LEVEL_END)
+  if (curState() == PLAYING_LEVEL_END)
     return levelEnd(elapsed, leds);
+
+  if (curState() == PLAYING_LOSE_LIFE)
+    return loseLife(elapsed, leds);
 
   level->draw(elapsed, leds);
 
   setLed(x, y, BALL_COLOR, leds);
 
   switch (curState()) {
-  case (LEVEL_START):
+  case (PLAYING_LEVEL_START):
     levelStart(elapsed, leds);
     break;
   case (PLAYING_DEATH):
@@ -152,37 +154,53 @@ void Game::levelStart(unsigned long elapsed, CRGB leds[]) {
   animateRing(elapsed, START_BURST, PLAYING, false, x, y, leds);
 }
 
+static long prevScore;
 void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
   if (elapsed == 0) {
+    prevScore = score;
     score += 100;
+    // TODO: add time bonus (broken)
     // long timeBonus = (10000 - levelTimer) / 100;
     // if (timeBonus > 0)
     //   score += timeBonus;
-
-    Serial.printf("score set to:  %ld, %ld\n", score, levelTimer);
   }
 
-  if (elapsed < 3000) {
-    if (elapsed < 1000) {
-      // Serial.printf("e: %ld, i: %ld, score: %ld\n", elapsed, interval, elapsed * interval);
-      // TODO: pass in fixed length
-      write((static_cast<double>(elapsed) / 1000) * score, leds);
-    } else
-      write(score, leds);
+  if (elapsed < 4000) {
+    int countUp = prevScore;
+    if (elapsed > 700 && elapsed < 1700)
+      countUp =
+          ((static_cast<float>(elapsed - 700) / 1000.0) * (score - prevScore)) +
+          prevScore;
+    if (elapsed >= 1700)
+      countUp = score;
+
+    writeFixed5(countUp, leds);
   } else if (level->levelNum >= LEVEL_COUNT)
-    updateState(GAME_END);
+    updateState(GAME_WIN);
   else {
-    updateState(LEVEL_START);
+    updateState(PLAYING_LEVEL_START);
     start(level->levelNum + 1);
   }
 }
 
 void Game::death(unsigned long elapsed, CRGB leds[]) {
-  lives -= 1;
-  if (lives < 0)
-    updateState(GAME_OVER);
-  else
-    animateRing(elapsed, DEATH_BURST, DEAD, true, x, y, leds);
+  if (elapsed > 0) // HACK
+    animateRing(elapsed, DEATH_BURST, PLAYING_LOSE_LIFE, true, x, y, leds);
+}
+
+void Game::loseLife(unsigned long elapsed, CRGB leds[]) {
+  if (lives == 0)
+    return updateState(GAME_OVER);
+
+  if (elapsed < 700)
+    write(lives, leds);
+  else if (elapsed < 1500)
+    write(lives - 1, leds);
+  else {
+    lives -= 1;
+    updateState(PLAYING_LEVEL_START);
+    start(level->levelNum);
+  }
 }
 
 void Game::checkDiags(int prevX, int prevY) {
@@ -201,11 +219,26 @@ void Game::checkDiags(int prevX, int prevY) {
   }
 }
 
+const int GLANCING_POS = 200;
 void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (x != prevX) {
+    int collisionPos = x % PX_SIZE;
+    bool isOverCenter = collisionPos > PX_CENTER;
+    int absPos = isOverCenter ? PX_SIZE - collisionPos : collisionPos;
+    if (absPos < GLANCING_POS &&
+            (isOverCenter && level->at(x + 1, y) != WALL) ||
+        (!isOverCenter && level->at(x - 1, y) != WALL)) {
+      double glancingRatio = absPos / GLANCING_POS;
+      velX = BOUNCE * velX * (1 - glancingRatio);
+      velY += (isOverCenter ? 1 : -1) * BOUNCE * velX * glancingRatio;
+    } else
+      velX = -BOUNCE * velX;
+
     x = prevX;
     posX = prevPosX;
-    velX = -BOUNCE * velX;
+
+    if (level->isPx(x, y, BREAKABLE_WALL))
+      level->breakPx(x, y);
   }
   if (y != prevY) {
     y = prevY;

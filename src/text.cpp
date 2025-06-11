@@ -93,6 +93,12 @@ void write(const char * text, CRGB leds[]) {
   }
 }
 
+void writeFixed5(long num, CRGB leds[]) {
+  char buff [6];
+  sprintf(buff, "%05d", num);
+  write(buff, leds);
+}
+
 void write(std::string text, CRGB leds[]) {
   write(text.c_str(), leds);
 }

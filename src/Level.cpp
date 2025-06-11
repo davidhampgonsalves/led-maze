@@ -12,7 +12,6 @@
 Level::Level(int num) {
   levelNum = num;
   char path[8];
-  sprintf(path, "/%02d.bmp", num);
 
   load(path);
 }
@@ -99,10 +98,24 @@ Px Level::at(int x, int y) {
     return FIRE;
   else if(c == PORTAL_RGB || c == H_PORTAL_RGB)
     return PORTAL;
-  else if(c == H_WALL_RGB)
-    return WALL;
 
   return WALL;
+}
+
+bool Level::isPx(int x, int y, Px px) {
+  if(x < 0 || y < 0 || x >= MAX_X || y >= MAX_Y) return false;
+
+  CRGB c = colorAt(x, y, level);
+  if(px == BREAKABLE_WALL && c == BREAKABLE_WALL_RGB)
+    return true;
+  else if(px == SLOW && c == SLOW_RGB)
+    return true;
+  else
+    return false;
+}
+
+void Level::breakPx(int x, int y) {
+  level[x * MAX_Y + y] = BLACK;
 }
 
 Pt Level::find(int x, int y, Px px) {

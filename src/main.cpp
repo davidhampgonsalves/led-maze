@@ -58,8 +58,8 @@ void gameStart(unsigned long elapsed) {
   if(elapsed < WORD_WAIT) write("get", leds);
   else if(elapsed < WORD_WAIT * 2) write("ready", leds);
   else {
-    game.start(1);
-    updateState(LEVEL_START);
+    game.start(2);
+    updateState(PLAYING_LEVEL_START);
   }
 }
 
@@ -74,9 +74,13 @@ void gameEnd(unsigned long elapsed) {
 }
 
 void gameOver(unsigned long elapsed) {
-  if(elapsed < WORD_WAIT) write("game", leds);
-  else if(elapsed < WORD_WAIT * 2) write("over", leds);
-  else updateState(TITLE);
+  if(elapsed > WORD_WAIT * 2)
+    // TODO: switch to score animation (dedupe from levelEnd)
+    // switch to highscore if you have a high score? - or just do something on the phone
+    return updateState(TITLE);
+
+  deadLevel->update(0);
+  deadLevel->draw(elapsed, leds);
 }
 
 void title(unsigned long elapsed) {
@@ -85,17 +89,6 @@ void title(unsigned long elapsed) {
     titleLevel->draw(elapsed, leds);
   } else
     updateState(HIGH_SCORES);
-}
-
-void dead(unsigned long elapsed) {
-  if(elapsed > 1500) {
-    updateState(LEVEL_START);
-    game.start(game.level->levelNum);
-    return;
-  }
-
-  deadLevel->update(0);
-  deadLevel->draw(elapsed, leds);
 }
 
 static int scoreIndex = 0;
@@ -155,16 +148,14 @@ void loop() {
     case GAME_OVER:
       gameOver(elapsed);
       break;
-    case GAME_END:
+    case GAME_WIN:
       gameEnd(elapsed);
-      break;
-    case DEAD:
-      dead(elapsed);
       break;
     case PLAYING:
     case PLAYING_DEATH:
-    case LEVEL_START:
-    case LEVEL_END:
+    case PLAYING_LEVEL_START:
+    case PLAYING_LEVEL_END:
+    case PLAYING_LOSE_LIFE:
       play(interval);
       break;
     default:

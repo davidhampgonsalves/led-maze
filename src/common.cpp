@@ -23,11 +23,11 @@ void setLed(int x, int y, CRGB c, CRGB leds[]) {
 // }
 
 int indexToPos(int xy) {
-  return (xy * 1000) + 500; // return center
+  return (xy * PX_SIZE) + PX_CENTER; // return center
 }
 
 int posToIndex(unsigned long xy) {
-  return round(xy / 1000);
+  return round(xy / PX_SIZE);
 }
 
 CRGB colorAt(int x, int y, CRGB leds[]) {
@@ -67,7 +67,7 @@ void animateRing(unsigned long elapsed, CRGB c, State next, bool outward, int x,
   if(outward)
     elapsed = 1200 - elapsed;
 
-  if (elapsed >= 0 && elapsed < 400) {
+  if (elapsed >= 0 && elapsed < 300) {
     setLed(x + 2, y, c, leds);
     setLed(x - 2, y, c, leds);
     setLed(x, y + 2, c, leds);
@@ -77,12 +77,12 @@ void animateRing(unsigned long elapsed, CRGB c, State next, bool outward, int x,
     setLed(x + 1, y - 1, c, leds);
     setLed(x - 1, y + 1, c, leds);
     setLed(x - 1, y - 1, c, leds);
-  } else if (elapsed >= 400 && elapsed < 800) {
+  } else if (elapsed >= 400 && elapsed < 700) {
     setLed(x + 1, y, c, leds);
     setLed(x - 1, y, c, leds);
     setLed(x, y + 1, c, leds);
     setLed(x, y - 1, c, leds);
-  } else if (elapsed >= 800 && elapsed <= 1200) {
+  } else if (elapsed >= 800 && elapsed <= 1100) {
     setLed(x, y, c, leds);
   } else
     updateState(next);
