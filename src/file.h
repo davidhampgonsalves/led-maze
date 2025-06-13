@@ -10,6 +10,7 @@ struct HighScore {
   long score;
 };
 
-void saveHighScore(char* name, long score);
+void writeHighScore(std::string name, long score);
 std::vector<HighScore> readHighScores();
 std::string readFile(const char* path);
+bool isHighScore(long score);

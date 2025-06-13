@@ -5,7 +5,7 @@
 #include <common.h>
 #include <math.h>
 #include <state.h>
-#include <stdio.h>
+// #include <stdio.h>
 #include <text.h>
 #include <vector>
 
@@ -221,25 +221,34 @@ void Game::checkDiags(int prevX, int prevY) {
 
 const int GLANCING_POS = 200;
 void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
+  int collisionPosX = x % PX_SIZE;
+  int collisionPosY = y % PX_SIZE;
+  bool isOverCenterX = collisionPosX > PX_CENTER;
+  bool isOverCenterY = collisionPosY > PX_CENTER;
+
+  if (level->isPx(x, y, BREAKABLE_WALL)) {
+    // TODO: min speed check?
+    level->breakPx(x, y);
+  }
+
   if (x != prevX) {
-    int collisionPos = x % PX_SIZE;
-    bool isOverCenter = collisionPos > PX_CENTER;
-    int absPos = isOverCenter ? PX_SIZE - collisionPos : collisionPos;
+    bool isOverCenterX = collisionPosX > PX_CENTER;
+    int absPos = isOverCenterX ? PX_SIZE - collisionPosX: collisionPosX;
     if (absPos < GLANCING_POS &&
-            (isOverCenter && level->at(x + 1, y) != WALL) ||
-        (!isOverCenter && level->at(x - 1, y) != WALL)) {
+        ((isOverCenterY && level->at(x, y + 1) != WALL) ||
+        (!isOverCenterY && level->at(x, y - 1) != WALL)) &&
+        ((isOverCenterX && level->at(x + 1, y) != WALL) ||
+        (!isOverCenterX && level->at(x - 1, y) != WALL))) {
       double glancingRatio = absPos / GLANCING_POS;
       velX = BOUNCE * velX * (1 - glancingRatio);
-      velY += (isOverCenter ? 1 : -1) * BOUNCE * velX * glancingRatio;
+      velY += (isOverCenterX ? 1 : -1) * BOUNCE * velX * glancingRatio;
     } else
       velX = -BOUNCE * velX;
 
     x = prevX;
     posX = prevPosX;
-
-    if (level->isPx(x, y, BREAKABLE_WALL))
-      level->breakPx(x, y);
   }
+
   if (y != prevY) {
     y = prevY;
     posY = prevPosY;

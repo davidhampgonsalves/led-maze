@@ -17,6 +17,7 @@ class Game{
     int ACCEL_DIVISOR;
     Level *level;
     int x, y;
+    long score;
   private:
     double applyFriction(unsigned long elapsed, double vel);
     void checkCollisions(int prevX, int prevY, double prevPosX, double prevPosY);
@@ -30,7 +31,6 @@ class Game{
     void updatePos(unsigned long newXPos, unsigned long newYPos);
 
     unsigned long levelTimer;
-    long score;
     unsigned int lives;
     double accelX, accelY;
     double velX, velY;

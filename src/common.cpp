@@ -31,6 +31,8 @@ int posToIndex(unsigned long xy) {
 }
 
 CRGB colorAt(int x, int y, CRGB leds[]) {
+  if(x < 0 || y < 0 || x >= MAX_X || y >= MAX_Y) return HIDDEN_WALL_COLOR;
+
   return leds[x * MAX_Y + y];
 }
 

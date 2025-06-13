@@ -12,6 +12,7 @@
 Level::Level(int num) {
   levelNum = num;
   char path[8];
+  sprintf(path, "/%02d.bmp", num);
 
   load(path);
 }
@@ -59,22 +60,18 @@ void Level::draw(unsigned long elapsed, CRGB leds[]) {
       CRGB c = colorAt(x, y, level);
       if(isHidden(c)) {
         bool isClose = (x <= game.x + 1 && x >= game.x - 1 && y <= game.y + 1 && y >= game.y - 1);
-        if(!isClose) continue;
+        if(!isClose)
+          continue;
       }
 
       if(px == FIRE) {
         setFlameLed(x, y, leds);
-        continue;
-      }
-
-      if(px == PORTAL) {
+      } else if(px == PORTAL) {
         setPortalLed(elapsed, x, y, leds);
-        continue;
-      }
-
-      if(px == WALL) c = HIDDEN_WALL_COLOR;
-
-      setLed(x, y, c, leds);
+      } else if(c == HIDDEN_WALL_COLOR)
+        setLed(x, y, HIDDEN_WALL_COLOR, leds);
+      else
+        setLed(x, y, c, leds);
     }
   }
 }
@@ -86,8 +83,6 @@ bool Level::isHidden(CRGB c) {
 }
 
 Px Level::at(int x, int y) {
-  if(x < 0 || y < 0 || x >= MAX_X || y >= MAX_Y) return WALL;
-
   CRGB c = colorAt(x, y, level);
 
   if (c == EMPTY_RGB || c == START_RGB)
@@ -103,8 +98,6 @@ Px Level::at(int x, int y) {
 }
 
 bool Level::isPx(int x, int y, Px px) {
-  if(x < 0 || y < 0 || x >= MAX_X || y >= MAX_Y) return false;
-
   CRGB c = colorAt(x, y, level);
   if(px == BREAKABLE_WALL && c == BREAKABLE_WALL_RGB)
     return true;

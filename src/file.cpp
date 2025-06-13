@@ -5,8 +5,9 @@
 
 #include "file.h"
 
+const char* HIGH_SCORE_PATH = "/high-scores.txt";
 std::vector<HighScore> readHighScores() {
-  File file = SD.open("/high-scores.txt");
+  File file = SD.open(HIGH_SCORE_PATH);
   std::vector<HighScore> highScores;
   if(!file){
     Serial.println("Failed to open file for reading");
@@ -41,21 +42,38 @@ std::string readFile(const char* path) {
   return contents;
 }
 
-// void writeFile(fs::FS &fs, const char * path, const char * message){
-//   Serial.printf("Writing file: %s\n", path);
+bool isHighScore(long score) {
+  auto scores = readHighScores();
+  return scores.back().score < score;
+}
+void writeFile(const char * path, std::string message){
+  Serial.printf("Writing file: %s\n", path);
 
-//   File file = fs.open(path, FILE_WRITE);
-//   if(!file){
-//     Serial.println("Failed to open file for writing");
-//     return;
-//   }
-//   if(file.print(message)){
-//     Serial.println("File written");
-//   } else {
-//     Serial.println("Write failed");
-//   }
-//   file.close();
-// }
+}
+
+void writeHighScore(std::string name, long score) {
+  auto scores = readHighScores();
+  int index = -1;
+  for(int i=0 ; i < scores.size() ; i++)
+    if(scores[i].score < score) index = i;
+
+  scores.insert(scores.begin() + index, HighScore{ name, score });
+
+  if(scores.size() > 3) scores.pop_back();
+
+  File file = SD.open(HIGH_SCORE_PATH, FILE_WRITE);
+  if(!file) {
+    Serial.println("Failed to open file for writing");
+    return;
+  }
+
+  char line [100];
+  for(int i=0 ; i < scores.size() ; i++) {
+    sprintf (line, "%s,%d", scores[i].name, scores[i].score);
+    file.println(line);
+  }
+  file.close();
+}
 
 void init(){
   if(!SD.begin(5)){

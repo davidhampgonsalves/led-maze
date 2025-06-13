@@ -58,7 +58,7 @@ void gameStart(unsigned long elapsed) {
   if(elapsed < WORD_WAIT) write("get", leds);
   else if(elapsed < WORD_WAIT * 2) write("ready", leds);
   else {
-    game.start(2);
+    game.start(1);
     updateState(PLAYING_LEVEL_START);
   }
 }
@@ -75,9 +75,7 @@ void gameEnd(unsigned long elapsed) {
 
 void gameOver(unsigned long elapsed) {
   if(elapsed > WORD_WAIT * 2)
-    // TODO: switch to score animation (dedupe from levelEnd)
-    // switch to highscore if you have a high score? - or just do something on the phone
-    return updateState(TITLE);
+    return updateState(isHighScore(game.score) ? HIGH_SCORE : TITLE);
 
   deadLevel->update(0);
   deadLevel->draw(elapsed, leds);
@@ -89,6 +87,21 @@ void title(unsigned long elapsed) {
     titleLevel->draw(elapsed, leds);
   } else
     updateState(HIGH_SCORES);
+}
+
+void highScore(unsigned long elapsed) {
+    if(elapsed == 0) {
+      // TODO: prompt user for name
+      writeHighScore(std::string{"abc"}, game.score);
+    }
+
+    // custome level
+    if(elapsed < WORD_WAIT) {
+      write("high", leds);
+    } else if(elapsed < WORD_WAIT * 2)
+      write("score", leds);
+    else
+      updateState(TITLE);
 }
 
 static int scoreIndex = 0;
@@ -141,6 +154,9 @@ void loop() {
       break;
     case HIGH_SCORES:
       highScores(elapsed);
+      break;
+    case HIGH_SCORE:
+      highScore(elapsed);
       break;
     case GAME_START:
       gameStart(elapsed);
