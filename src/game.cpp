@@ -5,9 +5,9 @@
 #include <common.h>
 #include <math.h>
 #include <state.h>
-// #include <stdio.h>
 #include <text.h>
 #include <vector>
+#include "audio.h"
 
 #include "Game.h"
 #include "Level.h"
@@ -119,6 +119,7 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX,
     updateState(PLAYING_LEVEL_END);
     break;
   case FIRE:
+    playDeath();
     updateState(PLAYING_DEATH);
     break;
   case PORTAL:

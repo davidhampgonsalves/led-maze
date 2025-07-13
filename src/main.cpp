@@ -93,16 +93,14 @@ void gameOver(unsigned long elapsed) {
 
 void title(unsigned long elapsed) {
   if(elapsed == 0) {
-    Serial.println("playing title.wav");
     playWav("/title-bg.wav");
-    // playDeath();
   }
 
-  // if(elapsed < 5000) {
+  if(elapsed < 5000) {
     titleLevel->update(0);
     titleLevel->draw(elapsed, leds);
-  // } else
-  //   updateState(HIGH_SCORES);
+  } else
+    updateState(HIGH_SCORES);
 }
 
 void highScore(unsigned long elapsed) {
