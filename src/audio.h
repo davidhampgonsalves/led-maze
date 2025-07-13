@@ -1,9 +1,10 @@
 #pragma once
 
-void playWav(const char* path, unsigned char*);
+void playWav(const char* path);
 void playDeath();
 
-void play();
+void playAudio();
+void initAudio();
 // songs: death, finish game, title, levels
 
 // void bounce();

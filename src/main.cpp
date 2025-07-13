@@ -19,12 +19,14 @@ std::vector<HighScore> scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
 Level *winLevel = NULL;
-unsigned char *audioBuff;
 
 void setup(){
   Serial.begin(115200);
   Serial.println("Starting up.");
   Serial.println(ESP.getFreeHeap());
+
+  initSd();
+  initAudio();
 
   server = new ControlServer();
   server->connect();
@@ -47,8 +49,6 @@ void setup(){
   deadLevel = new Level("/death.bmp");
   winLevel = new Level("/win.bmp");
   Serial.println("title read complete.");
-
-  audioBuff = (unsigned char *)malloc(90000);
 
   Serial.println("Start up complete.");
   Serial.print("Total heap:");
@@ -93,9 +93,9 @@ void gameOver(unsigned long elapsed) {
 
 void title(unsigned long elapsed) {
   if(elapsed == 0) {
-    Serial.println("title start");
-    // playWav("/title.wav", audioBuff);
-    playDeath();
+    Serial.println("playing title.wav");
+    playWav("/title-bg.wav");
+    // playDeath();
   }
 
   // if(elapsed < 5000) {
@@ -196,5 +196,6 @@ void loop() {
 
   // TODO: display frame time every 5 seconds
   FastLED.show();
+  playAudio();
   prev = now;
 }

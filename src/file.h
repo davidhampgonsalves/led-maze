@@ -15,3 +15,4 @@ std::vector<HighScore> readHighScores();
 std::string readFile(const char* path);
 void readWav(const char* path, unsigned char*);
 bool isHighScore(long score);
+void initSd();

@@ -89,7 +89,7 @@ void writeHighScore(std::string name, long score) {
   file.close();
 }
 
-void init(){
+void initSd() {
   if(!SD.begin(5)){
     Serial.println("Card Mount Failed");
     return;

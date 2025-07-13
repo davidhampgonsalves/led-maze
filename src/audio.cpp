@@ -1,31 +1,64 @@
 #include <Arduino.h>
-#include "Game_Audio.h"
-#include "sounds.h"
-#include "file.h"
+#include "AudioTools.h"
+#include "AudioTools/Disk/FileLoop.h"
+#include "AudioTools/AudioLibs/AudioESP32ULP.h"
+#include "SD.h"
 
-Game_Audio_Class GameAudio(26,0);
-Game_Audio_Wav_Class pmWav(pacmanDeath);
-Game_Audio_Wav_Class *wav = NULL;
+WAVDecoder wav;
+// AnalogAudioStream out;
+AudioESP32ULP out;
+EncodedAudioOutput decoder(&out, &wav);  // Decoding stream
+AudioInfo info(8000, 1, 16);
+File audioFile;
+FileLoop loopingFile;
+StreamCopy copier(decoder, loopingFile);
 
-void playWav(const char* path, unsigned char* buff) {
-  delay(100);
-  Serial.println("about to read");
-  delay(100);
-  readWav(path, buff);
-  Serial.println("about to create");
-  delay(100);
+SineWaveGenerator<int16_t> sineWave1(8000);
+GeneratedSoundStream<int16_t> sound1(sineWave1);
 
-  wav = new Game_Audio_Wav_Class(buff);
+void initAudio() {
+  AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning);
+  // AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info);
 
-  Serial.println("about to play, for:");
-  Serial.println(wav->getDuration());
-  Serial.println("sample rate: ");
-  Serial.println(wav->getSampleRate());
-  delay(100);
+  auto config = out.defaultConfig();
+  config.copyFrom(info);
+  // config.channels = 1;
 
-  GameAudio.PlayWav(wav, true, 1.0);
+  out.setMonoDAC(ULP_DAC2);
+  out.begin(config);
 }
 
-void playDeath() {
-  GameAudio.PlayWav(&pmWav, false, 1.0);
+void playWav(const char* path) {
+  loopingFile.setFile(SD.open(path));
+  loopingFile.begin();
+
+  decoder.begin();
 }
+
+// void playDeath() { }
+
+
+
+// AudioInfo info(8000, 1, 16);
+// SineWaveGenerator<int16_t> sineWave(32000);                // subclass of SoundGenerator with max amplitude of 32000
+// GeneratedSoundStream<int16_t> sound(sineWave);             // Stream generated from sine wave
+// // AnalogAudioStream out;
+// AudioESP32ULP out;
+// StreamCopy copier(out, sound);                             // copies sound into i2s
+
+// void initAudio() {
+//   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Info);
+
+//   auto config = out.defaultConfig();
+//   config.copyFrom(info);
+//   config.channels = 1;
+
+//   out.setMonoDAC(ULP_DAC2);
+//   out.begin(config);
+
+//   // Setup sine wave
+//   sineWave.begin(info, N_B4);
+// }
+// void playWav(const char* path) { }
+
+void playAudio() { copier.copy(); }
