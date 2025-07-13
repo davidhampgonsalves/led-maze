@@ -159,6 +159,7 @@ void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
   if (elapsed == 0) {
     prevScore = score;
     score += 100;
+    Serial.println(levelTimer);
     // TODO: add time bonus (broken)
     // long timeBonus = (10000 - levelTimer) / 100;
     // if (timeBonus > 0)
@@ -232,13 +233,12 @@ void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
   }
 
   if (x != prevX) {
-    bool isOverCenterX = collisionPosX > PX_CENTER;
-    int absPos = isOverCenterX ? PX_SIZE - collisionPosX: collisionPosX;
+    int absPos = isOverCenterX ? PX_SIZE - collisionPosX : collisionPosX;
     if (absPos < GLANCING_POS &&
         ((isOverCenterY && level->at(x, y + 1) != WALL) ||
-        (!isOverCenterY && level->at(x, y - 1) != WALL)) &&
+         (!isOverCenterY && level->at(x, y - 1) != WALL)) &&
         ((isOverCenterX && level->at(x + 1, y) != WALL) ||
-        (!isOverCenterX && level->at(x - 1, y) != WALL))) {
+         (!isOverCenterX && level->at(x - 1, y) != WALL))) {
       double glancingRatio = absPos / GLANCING_POS;
       velX = BOUNCE * velX * (1 - glancingRatio);
       velY += (isOverCenterX ? 1 : -1) * BOUNCE * velX * glancingRatio;
@@ -250,7 +250,18 @@ void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
   }
 
   if (y != prevY) {
-    y = prevY;
+    int absPos = isOverCenterY ? PX_SIZE - collisionPosY : collisionPosY;
+    if (absPos < GLANCING_POS &&
+        ((isOverCenterX && level->at(x + 1, y) != WALL) ||
+         (!isOverCenterX && level->at(x - 1, y) != WALL)) &&
+        ((isOverCenterY && level->at(x, y + 1) != WALL) ||
+         (!isOverCenterY && level->at(x, y - 1) != WALL))) {
+      double glancingRatio = absPos / GLANCING_POS;
+      velY = BOUNCE * velY * (1 - glancingRatio);
+      velX += (isOverCenterY ? 1 : -1) * BOUNCE * velY * glancingRatio;
+    } else
+      y = prevY;
+
     posY = prevPosY;
     velY = -BOUNCE * velY;
   }

@@ -1,22 +1,22 @@
 ## To do
-* corner deflections
+*[x] corner deflections
 *[x] hidden squares
-* slow squares
+*[x] fast squares
+*[x] score counting (level completion + time bonus)
+  * every level counts down for a set time and that adds to your score
+*[x] score counting level end screen
+*[x] high score saving
 * movable squares?
   * moving fire, bounces of walls?
-* score counting (level completion + time bonus)
-  * every level counts down for a set time and that adds to your score
-* score counting level end screen
-* high score saving
 * ~~breakable squares?~~
 * paper level map builder
 * sound hardware
 * sound software
-* color palate
 * controller website
 
+bmp files are 6x50 24 bit color.
 
-bmp files are 6x60 24 bit color.
+
 
 
 decalf 18.5 45 out in 20-23s

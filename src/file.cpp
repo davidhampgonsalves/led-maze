@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
@@ -40,6 +41,19 @@ std::string readFile(const char* path) {
   file.close();
 
   return contents;
+}
+
+void readWav(const char* path, unsigned char* buff) {
+  File file = SD.open(path);
+  Serial.println("File size");
+  Serial.println(file.size());
+  delay(100);
+  for(int i=0 ; file.available() ; i++){
+    // Serial.println(i);
+    // delay(10);
+    buff[i] = file.read();
+  }
+  file.close();
 }
 
 bool isHighScore(long score) {

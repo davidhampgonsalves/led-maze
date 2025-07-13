@@ -7,6 +7,7 @@
 #include "text.h"
 #include "state.h"
 #include "file.h"
+#include "audio.h"
 
 #define NUM_LEDS 300
 #define DATA_PIN 25
@@ -18,10 +19,12 @@ std::vector<HighScore> scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
 Level *winLevel = NULL;
+unsigned char *audioBuff;
 
 void setup(){
   Serial.begin(115200);
   Serial.println("Starting up.");
+  Serial.println(ESP.getFreeHeap());
 
   server = new ControlServer();
   server->connect();
@@ -35,7 +38,7 @@ void setup(){
   FastLED.show();
 
   scores = readHighScores();
-  Serial.println("SD card read complete.");
+  Serial.println("High score read complete.");
 
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
@@ -43,10 +46,17 @@ void setup(){
   titleLevel = new Level("/title.bmp");
   deadLevel = new Level("/death.bmp");
   winLevel = new Level("/win.bmp");
+  Serial.println("title read complete.");
 
-  updateState(TITLE);
+  audioBuff = (unsigned char *)malloc(90000);
 
   Serial.println("Start up complete.");
+  Serial.print("Total heap:");
+  Serial.println(ESP.getHeapSize());
+  Serial.print("Free heap: ");
+  Serial.println(ESP.getFreeHeap());
+
+  updateState(TITLE);
 }
 
 static uint32_t lastWS = 0;
@@ -82,11 +92,17 @@ void gameOver(unsigned long elapsed) {
 }
 
 void title(unsigned long elapsed) {
-  if(elapsed < 5000) {
+  if(elapsed == 0) {
+    Serial.println("title start");
+    // playWav("/title.wav", audioBuff);
+    playDeath();
+  }
+
+  // if(elapsed < 5000) {
     titleLevel->update(0);
     titleLevel->draw(elapsed, leds);
-  } else
-    updateState(HIGH_SCORES);
+  // } else
+  //   updateState(HIGH_SCORES);
 }
 
 void highScore(unsigned long elapsed) {
