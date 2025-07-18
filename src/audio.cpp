@@ -30,19 +30,26 @@ void initAudio() {
   mixer.begin();
 }
 
-void playWav(const char* path) {
+void playSong(const char* path) {
+  if(loopingFile != NULL) loopingFile.end();
   loopingFile.setFile(SD.open(path));
   loopingFile.begin();
 
   decoder.begin();
 }
 
-void playDeath() {
-  soundFile = SD.open("/death.wav");
+void playSound(const char* path) {
+  if(!effectCopier.available()) return; // only one sound at a time
+
+  soundFile = SD.open(path);
   effectDecoder.begin();
 }
 
 void playAudio() {
-  copier.copy();
-  effectCopier.copy();
+  if(copier.available()) copier.copy();
+  if(effectCopier.available()) effectCopier.copy();
+}
+
+void stopSong() {
+  loopingFile.end();
 }

@@ -19,6 +19,7 @@ std::vector<HighScore> scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
 Level *winLevel = NULL;
+State prevState;
 
 void setup(){
   Serial.begin(115200);
@@ -64,6 +65,9 @@ static uint32_t deltaWS = 2000;
 static unsigned long prev;
 
 void gameStart(unsigned long elapsed) {
+  stopSong();
+  playSound("/sounds/get-ready.wav");
+
   // Serial.printf("%d, %d %d\n", elapsed, now, getStateStart());
   if(elapsed < WORD_WAIT) write("get", leds);
   else if(elapsed < WORD_WAIT * 2) write("ready", leds);
@@ -90,10 +94,10 @@ void gameOver(unsigned long elapsed) {
   deadLevel->update(0);
   deadLevel->draw(elapsed, leds);
 }
+void gameOverInit() { playSound("/sounds/game-over.wav"); }
 
 void title(unsigned long elapsed) {
   if(elapsed == 0) {
-    playWav("/title-bg.wav");
   }
 
   if(elapsed < 5000) {
@@ -103,12 +107,9 @@ void title(unsigned long elapsed) {
     updateState(HIGH_SCORES);
 }
 
-void highScore(unsigned long elapsed) {
-    if(elapsed == 0) {
-      // TODO: prompt user for name
-      writeHighScore(std::string{"abc"}, game.score);
-    }
+void titleInit() { playSong("/music/title.wav"); }
 
+void highScore(unsigned long elapsed) {
     // custome level
     if(elapsed < WORD_WAIT) {
       write("high", leds);
@@ -116,6 +117,12 @@ void highScore(unsigned long elapsed) {
       write("score", leds);
     else
       updateState(TITLE);
+}
+
+void highScoreInit() {
+  // TODO: prompt user for name
+  // playSound("/sounds/high-score.wav");
+  writeHighScore(std::string{"abc"}, game.score);
 }
 
 static int scoreIndex = 0;
@@ -150,6 +157,7 @@ void play(uint interval) {
   game.draw(elapsed, leds);
 }
 
+
 void loop() {
   unsigned long now = millis();
   uint interval = now - prev;
@@ -161,7 +169,21 @@ void loop() {
     lastWS = millis();
   }
 
-  int state = curState();
+  State state = curState();
+
+  if(state != prevState)
+    switch(state) {
+      case TITLE:
+        titleInit();
+        break;
+      case HIGH_SCORE:
+        highScoreInit();
+        break;
+      case GAME_OVER:
+        gameOverInit();
+        break;
+    }
+
   switch(state) {
     case TITLE:
       title(elapsed);
@@ -190,6 +212,8 @@ void loop() {
       break;
     default:
       Serial.println("ERROR: game state not handled.");
+
+    prevState = state;
   }
 
   // TODO: display frame time every 5 seconds

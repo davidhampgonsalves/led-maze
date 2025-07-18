@@ -42,6 +42,20 @@ void Game::start(int lvl) {
 
   velX = 0;
   velY = 0;
+
+  switch (lvl) {
+  case 1:
+    playSong("/music/sparky.wav");
+    break;
+  case 2:
+    playSong("/music/spooky.wav");
+    break;
+  case 3:
+    playSong("/music/choir.wav");
+    break;
+  default:
+    playSong("/music/choir.wav");
+  }
 }
 
 void Game::updateAccel(double beta, double gamma) {
@@ -113,13 +127,16 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX,
     checkDiags(prevX, prevY);
     break;
   case WALL:
+    if(speed() > 10) // TODO: what should this value be?
+      playSound("/sounds/bounce.wav");
     wall(prevX, prevY, prevPosX, prevPosY);
     break;
   case FINISH:
+    playSound("/sounds/win.wav");
     updateState(PLAYING_LEVEL_END);
     break;
   case FIRE:
-    playDeath();
+    playSound("/sounds/death.wav");
     updateState(PLAYING_DEATH);
     break;
   case PORTAL:
@@ -228,8 +245,8 @@ void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
   bool isOverCenterX = collisionPosX > PX_CENTER;
   bool isOverCenterY = collisionPosY > PX_CENTER;
 
-  if (level->isPx(x, y, BREAKABLE_WALL)) {
-    // TODO: min speed check?
+  // TODO: what should this value be?
+  if (speed() > 10 && level->isPx(x, y, BREAKABLE_WALL)) {
     level->breakPx(x, y);
   }
 
@@ -279,6 +296,7 @@ bool Game::warp(int prevX, int prevY) {
 
   if (level->at(posToIndex(tmpXPos), posToIndex(tmpYPos)) == EMPTY) {
     updatePos(tmpXPos, tmpYPos);
+    playSound("/sounds/portal.wav");
     return true;
   } else {
     return false;
@@ -290,4 +308,8 @@ void Game::updatePos(unsigned long newPosX, unsigned long newPosY) {
   posY = newPosY;
   x = posToIndex(posX);
   y = posToIndex(posY);
+}
+
+int Game::speed() {
+  return abs(velX) + abs(velY);
 }

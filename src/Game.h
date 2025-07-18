@@ -29,6 +29,7 @@ class Game{
     bool warp(int prevX, int prevY);
     void wall(int prevX, int prevY, int prevPosX, int prevPosY);
     void updatePos(unsigned long newXPos, unsigned long newYPos);
+    int speed();
 
     unsigned long levelTimer;
     unsigned int lives;
