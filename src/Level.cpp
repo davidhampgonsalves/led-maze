@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <vector>
+// #include <vector>
 #include <FastLED.h>
 #include <cmath>
 #include "Level.h"
@@ -11,8 +11,8 @@
 
 Level::Level(int num) {
   levelNum = num;
-  char path[8];
-  sprintf(path, "/%02d.bmp", num);
+  char path[15];
+  sprintf(path, "/levels/%02d.bmp", num);
 
   load(path);
 }
@@ -22,10 +22,9 @@ Level::Level(const char* path) {
 }
 
 void Level::load(const char* path) {
-  std::string data = readFile(path);
+  readFile(path, data);
 
   int headerOffset = static_cast<int>(data[10]);
-  // Serial.printf("header offset: %d\n", headerOffset);
 
   int dataIndex = headerOffset;
   for (int y = 0; y < MAX_Y; y++) {
@@ -41,7 +40,6 @@ void Level::load(const char* path) {
       level[x * MAX_Y + y] = c;
 
       if (x == MAX_X - 1) {
-        // Serial.printf(" - %d\n", pixelIndex);
         dataIndex += 2; // skip padding: 6 pixels * 3 bytes to a multiple of 4
       }
       dataIndex += 3;
@@ -60,15 +58,14 @@ void Level::draw(unsigned long elapsed, CRGB leds[]) {
       CRGB c = colorAt(x, y, level);
       if(isHidden(c)) {
         bool isClose = (x <= game.x + 1 && x >= game.x - 1 && y <= game.y + 1 && y >= game.y - 1);
-        if(!isClose)
-          continue;
+        if(!isClose) continue;
       }
 
       if(px == FIRE) {
         setFlameLed(x, y, leds);
       } else if(px == PORTAL) {
         setPortalLed(elapsed, x, y, leds);
-      } else if(c == HIDDEN_WALL_COLOR)
+      } else if(c == H_WALL_RGB)
         setLed(x, y, HIDDEN_WALL_COLOR, leds);
       else
         setLed(x, y, c, leds);

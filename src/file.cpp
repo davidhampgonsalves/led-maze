@@ -32,29 +32,27 @@ std::vector<HighScore> readHighScores() {
   return highScores;
 }
 
-std::string readFile(const char* path) {
+// THis is shorter if it works
+void readFile(const char* path, char* out) {
   File file = SD.open(path);
-  std::string contents = "";
-  while(file.available()){
-    contents += file.read();
+  int i=0;
+  for( ; file.available() ; i++){
+    out[i] = file.read();
   }
-  file.close();
-
-  return contents;
-}
-
-void readWav(const char* path, unsigned char* buff) {
-  File file = SD.open(path);
-  Serial.println("File size");
-  Serial.println(file.size());
-  delay(100);
-  for(int i=0 ; file.available() ; i++){
-    // Serial.println(i);
-    // delay(10);
-    buff[i] = file.read();
-  }
+  out[i] = '\0';
   file.close();
 }
+
+// void readFile(const char* path, unsigned char* buff) {
+//   File file = SD.open(path);
+//   Serial.println("File size");
+//   Serial.println(file.size());
+//   delay(100);
+//   for(int i=0 ; file.available() ; i++){
+//     buff[i] = file.read();
+//   }
+//   file.close();
+// }
 
 bool isHighScore(long score) {
   auto scores = readHighScores();

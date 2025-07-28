@@ -47,18 +47,6 @@ const unsigned long long digits[] = {
 const unsigned int FONT_SIZE=6;
 const unsigned int CHAR_OFFSET=4;
 
-// void printBits(size_t const size, unsigned long long int b)
-// {
-//     unsigned char byte;
-//     int i, j;
-
-//     for (j = size; j >= 0; j--) {
-//         byte = (b >> j) & 1;
-//         Serial.printf("%u", byte);
-//     }
-//     Serial.println("");
-// }
-
 void writeLetter(int charCode, int offset, CRGB leds[], const unsigned long long * font) {
   for(int i=0 ; i < FONT_SIZE * FONT_SIZE ; i++) {
     bool bit = (font[charCode] >> i) & 1;

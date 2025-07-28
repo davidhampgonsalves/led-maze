@@ -27,6 +27,7 @@ Game::Game() {
 
 void Game::start(int lvl) {
   level = new Level(lvl);
+  // level = new Level("/levels/01.bmp");
   accelX, accelY = 0;
 
   if (lvl == 1) {
@@ -56,6 +57,7 @@ void Game::start(int lvl) {
   default:
     playSong("/music/choir.wav");
   }
+  delay(100);
 }
 
 void Game::updateAccel(double beta, double gamma) {
@@ -127,8 +129,6 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX,
     checkDiags(prevX, prevY);
     break;
   case WALL:
-    if(speed() > 10) // TODO: what should this value be?
-      playSound("/sounds/bounce.wav");
     wall(prevX, prevY, prevPosX, prevPosY);
     break;
   case FINISH:
@@ -240,48 +240,33 @@ void Game::checkDiags(int prevX, int prevY) {
 
 const int GLANCING_POS = 200;
 void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
-  int collisionPosX = x % PX_SIZE;
-  int collisionPosY = y % PX_SIZE;
-  bool isOverCenterX = collisionPosX > PX_CENTER;
-  bool isOverCenterY = collisionPosY > PX_CENTER;
+  // check speed in direction that is hitting wall
+  bool isImpactInX = x != prevX && level->at(x, prevY) == WALL;
+  bool isImpactInY = y != prevY && level->at(prevX, y) == WALL;
 
-  // TODO: what should this value be?
-  if (speed() > 10 && level->isPx(x, y, BREAKABLE_WALL)) {
-    level->breakPx(x, y);
+  if ((isImpactInX && abs(velX) > 10) || (isImpactInY && abs(velY) > 10)) {
+    // Serial.printf("%d, %f, %d, %f\n", isImpactInX, abs(velX), isImpactInY, abs(velY));
+    playSound("/sounds/bounce.wav");
+    if(level->isPx(x, y, BREAKABLE_WALL)) level->breakPx(x, y);
   }
 
-  if (x != prevX) {
-    int absPos = isOverCenterX ? PX_SIZE - collisionPosX : collisionPosX;
-    if (absPos < GLANCING_POS &&
-        ((isOverCenterY && level->at(x, y + 1) != WALL) ||
-         (!isOverCenterY && level->at(x, y - 1) != WALL)) &&
-        ((isOverCenterX && level->at(x + 1, y) != WALL) ||
-         (!isOverCenterX && level->at(x - 1, y) != WALL))) {
-      double glancingRatio = absPos / GLANCING_POS;
-      velX = BOUNCE * velX * (1 - glancingRatio);
-      velY += (isOverCenterX ? 1 : -1) * BOUNCE * velX * glancingRatio;
-    } else
-      velX = -BOUNCE * velX;
+  int collisionX = x % PX_SIZE;
+  int collisionY = y % PX_SIZE;
+  bool isOverCenterX = collisionX > PX_CENTER;
+  bool isOverCenterY = collisionY > PX_CENTER;
+
+  if (isImpactInX) {
+    velX = -BOUNCE * velX;
 
     x = prevX;
     posX = prevPosX;
   }
 
-  if (y != prevY) {
-    int absPos = isOverCenterY ? PX_SIZE - collisionPosY : collisionPosY;
-    if (absPos < GLANCING_POS &&
-        ((isOverCenterX && level->at(x + 1, y) != WALL) ||
-         (!isOverCenterX && level->at(x - 1, y) != WALL)) &&
-        ((isOverCenterY && level->at(x, y + 1) != WALL) ||
-         (!isOverCenterY && level->at(x, y - 1) != WALL))) {
-      double glancingRatio = absPos / GLANCING_POS;
-      velY = BOUNCE * velY * (1 - glancingRatio);
-      velX += (isOverCenterY ? 1 : -1) * BOUNCE * velY * glancingRatio;
-    } else
-      y = prevY;
-
-    posY = prevPosY;
+  if (isImpactInY) {
     velY = -BOUNCE * velY;
+
+    y = prevY;
+    posY = prevPosY;
   }
 }
 
@@ -308,8 +293,4 @@ void Game::updatePos(unsigned long newPosX, unsigned long newPosY) {
   posY = newPosY;
   x = posToIndex(posX);
   y = posToIndex(posY);
-}
-
-int Game::speed() {
-  return abs(velX) + abs(velY);
 }

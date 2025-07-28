@@ -30,6 +30,7 @@ class Game{
     void wall(int prevX, int prevY, int prevPosX, int prevPosY);
     void updatePos(unsigned long newXPos, unsigned long newYPos);
     int speed();
+    bool shouldGlance(int prevX, int prevY, bool isOverCenterX, bool isOverCenterY);
 
     unsigned long levelTimer;
     unsigned int lives;

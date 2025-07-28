@@ -25,7 +25,9 @@ void ControlServer::cleanupWsClients() {
 }
 
 
-ControlServer::ControlServer() { }
+ControlServer::ControlServer() {
+  readFile("/index.html", indexData);
+}
 
 void ControlServer::connect() {
   // Connect to Wi-Fi
@@ -40,9 +42,8 @@ void ControlServer::connect() {
   Serial.println(WiFi.localIP());
 
   // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    // request->send(SPIFFS, "/index.html", String(), false);
-    request->send(200, "text/html", readFile("/index.html").c_str());
+  server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    request->send(200, "text/html", indexData);
   });
 
   wsHandler.onConnect([](AsyncWebSocket *server, AsyncWebSocketClient *client) {

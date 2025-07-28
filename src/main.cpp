@@ -46,9 +46,9 @@ void setup(){
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
 
-  titleLevel = new Level("/title.bmp");
-  deadLevel = new Level("/death.bmp");
-  winLevel = new Level("/win.bmp");
+  titleLevel = new Level("/screens/title.bmp");
+  deadLevel = new Level("/screens/death.bmp");
+  winLevel = new Level("/screens/win.bmp");
   Serial.println("title read complete.");
 
   Serial.println("Start up complete.");
@@ -56,8 +56,6 @@ void setup(){
   Serial.println(ESP.getHeapSize());
   Serial.print("Free heap: ");
   Serial.println(ESP.getFreeHeap());
-
-  updateState(TITLE);
 }
 
 static uint32_t lastWS = 0;
@@ -65,16 +63,17 @@ static uint32_t deltaWS = 2000;
 static unsigned long prev;
 
 void gameStart(unsigned long elapsed) {
-  stopSong();
-  playSound("/sounds/get-ready.wav");
-
-  // Serial.printf("%d, %d %d\n", elapsed, now, getStateStart());
   if(elapsed < WORD_WAIT) write("get", leds);
   else if(elapsed < WORD_WAIT * 2) write("ready", leds);
   else {
     game.start(1);
     updateState(PLAYING_LEVEL_START);
   }
+}
+
+void gameStartInit() {
+  stopSong();
+  playSound("/sounds/get-ready.wav");
 }
 
 void gameEnd(unsigned long elapsed) {
@@ -88,18 +87,21 @@ void gameEnd(unsigned long elapsed) {
 }
 
 void gameOver(unsigned long elapsed) {
-  if(elapsed > WORD_WAIT * 2)
-    return updateState(isHighScore(game.score) ? HIGH_SCORE : TITLE);
+  if(elapsed > 5000) {
+    if(isHighScore(game.score)) {
+      // TODO: prompt user for highscore info
+    }
+    return updateState(TITLE);
+  }
 
   deadLevel->update(0);
   deadLevel->draw(elapsed, leds);
 }
-void gameOverInit() { playSound("/sounds/game-over.wav"); }
+void gameOverInit() {
+  playSound("/sounds/game-over.wav");
+}
 
 void title(unsigned long elapsed) {
-  if(elapsed == 0) {
-  }
-
   if(elapsed < 5000) {
     titleLevel->update(0);
     titleLevel->draw(elapsed, leds);
@@ -174,10 +176,14 @@ void loop() {
   if(state != prevState)
     switch(state) {
       case TITLE:
+        Serial.printf("prev: %d, curr: %d\n", prevState, state);
         titleInit();
         break;
       case HIGH_SCORE:
         highScoreInit();
+        break;
+      case GAME_START:
+        gameStartInit();
         break;
       case GAME_OVER:
         gameOverInit();
@@ -185,6 +191,10 @@ void loop() {
     }
 
   switch(state) {
+    case START_UP:
+      updateState(TITLE);
+      state = curState();
+      break;
     case TITLE:
       title(elapsed);
       break;
@@ -212,9 +222,8 @@ void loop() {
       break;
     default:
       Serial.println("ERROR: game state not handled.");
-
-    prevState = state;
   }
+  prevState = state;
 
   // TODO: display frame time every 5 seconds
   FastLED.show();

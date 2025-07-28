@@ -1,6 +1,7 @@
 #pragma once
 
 enum State {
+  START_UP,
   TITLE,
   GAME_START,
   GAME_OVER,

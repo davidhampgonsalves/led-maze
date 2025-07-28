@@ -31,6 +31,8 @@ void initAudio() {
 }
 
 void playSong(const char* path) {
+  Serial.printf("playing song %s\n", path);
+
   if(loopingFile != NULL) loopingFile.end();
   loopingFile.setFile(SD.open(path));
   loopingFile.begin();
@@ -39,7 +41,9 @@ void playSong(const char* path) {
 }
 
 void playSound(const char* path) {
-  if(!effectCopier.available()) return; // only one sound at a time
+  return;
+  Serial.printf("playing sound %s\n", path);
+  if(!effectCopier.isActive()) return; // only one sound at a time
 
   soundFile = SD.open(path);
   effectDecoder.begin();

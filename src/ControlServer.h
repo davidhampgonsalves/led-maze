@@ -5,4 +5,6 @@ class ControlServer {
     ControlServer();
     void cleanupWsClients();
     void connect();
+  private:
+    char indexData[7000];
 };

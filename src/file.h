@@ -12,7 +12,8 @@ struct HighScore {
 
 void writeHighScore(std::string name, long score);
 std::vector<HighScore> readHighScores();
-std::string readFile(const char* path);
-void readWav(const char* path, unsigned char*);
+// std::string readFile(const char* path);
+void readFile(const char* path, char*);
+// void readWav(const char* path, unsigned char*);
 bool isHighScore(long score);
 void initSd();

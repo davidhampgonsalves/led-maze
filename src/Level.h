@@ -3,9 +3,9 @@
 #include <FastLED.h>
 #include <common.h>
 
-enum Px { EMPTY, WALL, BREAKABLE_WALL, FIRE, SLOW, FINISH, START, PORTAL, SLIME, H_WALL, H_FIRE, H_FINISH, H_PORTAL };
+enum Px { EMPTY, WALL, BREAKABLE_WALL, FIRE, SLOW, FINISH, START, PORTAL, H_WALL, H_FIRE, H_FINISH, H_PORTAL };
 
-const uint8_t LEVEL_COUNT = 3;
+const uint8_t LEVEL_COUNT = 14;
 
 const CRGB EMPTY_RGB = CRGB(255, 255, 255);
 const CRGB FIRE_RGB = CRGB(255, 0, 0);
@@ -38,4 +38,5 @@ class Level {
 
   private:
     CRGB level[MAX_X * MAX_Y];
+    char data[10000]; // todo: can be 2k
 };
