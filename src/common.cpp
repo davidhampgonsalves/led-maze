@@ -14,14 +14,6 @@ void setLed(int x, int y, CRGB c, CRGB leds[]) {
   leds[x * MAX_Y + y] = c;
 }
 
-// void setLed(int x, int y, CHSV c, CRGB leds[]) {
-//   if(x % 2 == 1) y = MAX_Y - y - 1;
-
-//   c.value = dim8_lin(c.value); // gamma correction
-
-//   leds[x * MAX_Y + y] = c;
-// }
-
 int indexToPos(int xy) {
   return (xy * PX_SIZE) + PX_CENTER; // return center
 }
@@ -40,16 +32,16 @@ const uint8_t SHIMMER_BRIGHTNESS_VARIATION = 30; // Max brightness variation (0-
 const uint8_t SHIMMER_HUE_VARIATION = 5;      // Max hue variation (0-255)
 const uint8_t SHIMMER_SATURATION_VARIATION = 20; // Max saturation variation (0-255)
 const uint16_t SHIMMER_SPEED = 20;             // Controls how fast the shimmer changes
-void shimmer(unsigned long elapsed, int x, int y, CHSV hsv, CRGB leds[]) {
-    uint8_t brightnessOffset = sin8_C(elapsed / SHIMMER_SPEED + 0) * SHIMMER_BRIGHTNESS_VARIATION / 255;
-    uint8_t hueOffset = sin8_C(elapsed / (SHIMMER_SPEED * 1.5) + 100) * SHIMMER_HUE_VARIATION / 255;
-    uint8_t saturationOffset = sin8_C(elapsed / (SHIMMER_SPEED * 0.7) + 200) * SHIMMER_SATURATION_VARIATION / 255;
+void setShimmerLed(unsigned long elapsed, int x, int y, CHSV hsv, CRGB leds[]) {
+  uint8_t brightnessOffset = sin8_C(elapsed / SHIMMER_SPEED + 0) * SHIMMER_BRIGHTNESS_VARIATION / 255;
+  uint8_t hueOffset = sin8_C(elapsed / (SHIMMER_SPEED * 1.5) + 100) * SHIMMER_HUE_VARIATION / 255;
+  uint8_t saturationOffset = sin8_C(elapsed / (SHIMMER_SPEED * 0.7) + 200) * SHIMMER_SATURATION_VARIATION / 255;
 
-    hsv.val = constrain(hsv.val + brightnessOffset - (SHIMMER_BRIGHTNESS_VARIATION / 2), 0, 255);
-    hsv.hue += hueOffset - (SHIMMER_HUE_VARIATION / 2);
-    hsv.sat = constrain(hsv.sat + saturationOffset - (SHIMMER_SATURATION_VARIATION / 2), 0, 255);
+  hsv.val = constrain(hsv.val + brightnessOffset - (SHIMMER_BRIGHTNESS_VARIATION / 2), 0, 255);
+  hsv.hue += hueOffset - (SHIMMER_HUE_VARIATION / 2);
+  hsv.sat = constrain(hsv.sat + saturationOffset - (SHIMMER_SATURATION_VARIATION / 2), 0, 255);
 
-    setLed(x, y, hsv2rgb_spectrum(hsv), leds);
+  setLed(x, y, hsv2rgb_spectrum(hsv), leds);
 }
 
 void setFlameLed(int x, int y, CRGB leds[]) {
@@ -57,10 +49,6 @@ void setFlameLed(int x, int y, CRGB leds[]) {
   uint8_t r  = random(180, 255);
   uint8_t g  = random(0, 100);
   setLed(x, y, CRGB{ r, g, 0 }, leds);
-}
-
-void setPortalLed(unsigned long elapsed, int x, int y, CRGB leds[]) {
-  shimmer(elapsed, x, y, CHSV{ 202, 100, 100 }, leds);
 }
 
 void animateRing(unsigned long elapsed, CRGB c, State next, bool outward, int x, int y, CRGB leds[]) {

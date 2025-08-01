@@ -25,9 +25,8 @@ Game::Game() {
   TERM_VELOCITY = 50;
 }
 
-void Game::start(int lvl) {
+void Game::start(int lvl, bool isRestart) {
   level = new Level(lvl);
-  // level = new Level("/levels/01.bmp");
   accelX, accelY = 0;
 
   if (lvl == 1) {
@@ -44,6 +43,8 @@ void Game::start(int lvl) {
   velX = 0;
   velY = 0;
 
+  if(isRestart) return;
+
   switch (lvl) {
   case 1:
     playSong("/music/sparky.wav");
@@ -57,7 +58,6 @@ void Game::start(int lvl) {
   default:
     playSong("/music/choir.wav");
   }
-  delay(100);
 }
 
 void Game::updateAccel(double beta, double gamma) {
@@ -198,7 +198,7 @@ void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
     updateState(GAME_WIN);
   else {
     updateState(PLAYING_LEVEL_START);
-    start(level->levelNum + 1);
+    start(level->levelNum + 1, true);
   }
 }
 
@@ -218,7 +218,7 @@ void Game::loseLife(unsigned long elapsed, CRGB leds[]) {
   else {
     lives -= 1;
     updateState(PLAYING_LEVEL_START);
-    start(level->levelNum);
+    start(level->levelNum, false);
   }
 }
 

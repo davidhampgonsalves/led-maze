@@ -64,7 +64,9 @@ void Level::draw(unsigned long elapsed, CRGB leds[]) {
       if(px == FIRE) {
         setFlameLed(x, y, leds);
       } else if(px == PORTAL) {
-        setPortalLed(elapsed, x, y, leds);
+        setShimmerLed(elapsed, x, y, PORTAL_HSV, leds);
+      } else if(px == SLOW) {
+        setShimmerLed(elapsed, x, y, SLOW_HSV, leds);
       } else if(c == H_WALL_RGB)
         setLed(x, y, HIDDEN_WALL_COLOR, leds);
       else
@@ -90,6 +92,8 @@ Px Level::at(int x, int y) {
     return FIRE;
   else if(c == PORTAL_RGB || c == H_PORTAL_RGB)
     return PORTAL;
+  else if(c == SLOW_RGB)
+    return SLOW;
 
   return WALL;
 }

@@ -19,7 +19,7 @@ std::vector<HighScore> scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
 Level *winLevel = NULL;
-State prevState;
+State prevState = GAME_OVER;
 
 void setup(){
   Serial.begin(115200);
@@ -56,6 +56,7 @@ void setup(){
   Serial.println(ESP.getHeapSize());
   Serial.print("Free heap: ");
   Serial.println(ESP.getFreeHeap());
+
 }
 
 static uint32_t lastWS = 0;
@@ -66,7 +67,7 @@ void gameStart(unsigned long elapsed) {
   if(elapsed < WORD_WAIT) write("get", leds);
   else if(elapsed < WORD_WAIT * 2) write("ready", leds);
   else {
-    game.start(1);
+    game.start(1, false);
     updateState(PLAYING_LEVEL_START);
   }
 }

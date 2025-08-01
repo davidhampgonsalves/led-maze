@@ -9,7 +9,7 @@ class Game{
     void updateAccel(double, double);
     void update(int elapsed);
     void draw(unsigned long elapsed, CRGB leds[]);
-    void start(int lvl);
+    void start(int lvl, bool isRestart);
 
     double GRAVITY;
     double FRICTION;

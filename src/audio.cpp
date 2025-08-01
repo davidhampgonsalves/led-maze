@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include "AudioTools.h"
-#include "AudioTools/Disk/FileLoop.h"
 #include "AudioTools/AudioLibs/AudioESP32ULP.h"
 #include "SD.h"
 
@@ -12,10 +11,24 @@ EncodedAudioOutput decoder(&out, &wav);  // Decoding stream
 EncodedAudioOutput effectDecoder(&out, &effectWav);  // Decoding stream
 AudioInfo info(8000, 1, 16);
 File soundFile;
-FileLoop loopingFile;
-OutputMixer<int16_t> mixer(out, 1); // if you set this to 2 (as I think you should) audio plays too fast
-StreamCopy copier(mixer, loopingFile);
+File songFile;
+OutputMixer<int16_t> mixer(out, 2); // if you set this to 2 (as I think you should) audio plays too fast
+StreamCopy copier(mixer, songFile);
 StreamCopy effectCopier(mixer, soundFile);
+
+void playSong(const char* path) {
+  Serial.printf("playing song %s\n", path);
+
+  if(songFile != NULL) songFile.close();
+  songFile = SD.open(path);
+}
+
+void playSound(const char* path) {
+  if(!effectCopier.isActive()) return; // only one sound at a time
+
+  if(soundFile != NULL) soundFile.close();
+  soundFile = SD.open(path);
+}
 
 void initAudio() {
   AudioToolsLogger.begin(Serial, AudioToolsLogLevel::Warning);
@@ -28,32 +41,23 @@ void initAudio() {
   out.begin(config);
 
   mixer.begin();
-}
 
-void playSong(const char* path) {
-  Serial.printf("playing song %s\n", path);
-
-  if(loopingFile != NULL) loopingFile.end();
-  loopingFile.setFile(SD.open(path));
-  loopingFile.begin();
+  // always need to play something so that the steams are in sync
+  playSound("/sounds/silence.wav");
+  playSong("/sounds/silence.wav");
 
   decoder.begin();
-}
-
-void playSound(const char* path) {
-  return;
-  Serial.printf("playing sound %s\n", path);
-  if(!effectCopier.isActive()) return; // only one sound at a time
-
-  soundFile = SD.open(path);
   effectDecoder.begin();
 }
 
 void playAudio() {
-  if(copier.available()) copier.copy();
-  if(effectCopier.available()) effectCopier.copy();
+  if(!copier.available()) songFile.seek(0);
+  if(!effectCopier.available()) playSound("/sounds/silence.wav");
+
+  copier.copy();
+  effectCopier.copy();
 }
 
 void stopSong() {
-  loopingFile.end();
+  playSong("/sounds/silence.wav");
 }
