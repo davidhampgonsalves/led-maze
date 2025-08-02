@@ -151,23 +151,13 @@ void highScores(unsigned long elapsed) {
   }
 }
 
-void play(uint interval) {
-  game.update(interval);
-
-  unsigned long now = millis();
-  auto elapsed = now - getStateStart(); // update can change state
-
-  game.draw(elapsed, leds);
-}
-
-
 void loop() {
   unsigned long now = millis();
   uint interval = now - prev;
   auto elapsed = now - getStateStart();
   FastLED.clear();
 
-  if (elapsed >= deltaWS) {
+  if (now - lastWS >= deltaWS) {
     server->cleanupWsClients();
     lastWS = millis();
   }
@@ -177,7 +167,6 @@ void loop() {
   if(state != prevState)
     switch(state) {
       case TITLE:
-        Serial.printf("prev: %d, curr: %d\n", prevState, state);
         titleInit();
         break;
       case HIGH_SCORE:
@@ -191,6 +180,7 @@ void loop() {
         break;
     }
 
+  prevState = state;
   switch(state) {
     case START_UP:
       updateState(TITLE);
@@ -219,12 +209,12 @@ void loop() {
     case PLAYING_LEVEL_START:
     case PLAYING_LEVEL_END:
     case PLAYING_LOSE_LIFE:
-      play(interval);
+      game.update(interval);
+      game.draw(leds);
       break;
     default:
       Serial.println("ERROR: game state not handled.");
   }
-  prevState = state;
 
   // TODO: display frame time every 5 seconds
   FastLED.show();

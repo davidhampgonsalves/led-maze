@@ -8,11 +8,12 @@ class Game{
     Game();
     void updateAccel(double, double);
     void update(int elapsed);
-    void draw(unsigned long elapsed, CRGB leds[]);
+    void draw(CRGB leds[]);
     void start(int lvl, bool isRestart);
 
     double GRAVITY;
     double FRICTION;
+    double SLOW_FRICTION;
     double TERM_VELOCITY;
     int ACCEL_DIVISOR;
     Level *level;

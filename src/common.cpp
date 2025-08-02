@@ -54,6 +54,8 @@ void setFlameLed(int x, int y, CRGB leds[]) {
 void animateRing(unsigned long elapsed, CRGB c, State next, bool outward, int x, int y, CRGB leds[]) {
   setLed(x, y, BLACK, leds);
 
+  if(elapsed > 1200) return updateState(next);
+
   if(outward)
     elapsed = 1200 - elapsed;
 
@@ -67,6 +69,11 @@ void animateRing(unsigned long elapsed, CRGB c, State next, bool outward, int x,
     setLed(x + 1, y - 1, c, leds);
     setLed(x - 1, y + 1, c, leds);
     setLed(x - 1, y - 1, c, leds);
+
+    setLed(x + 1, y, BLACK, leds);
+    setLed(x - 1, y, BLACK, leds);
+    setLed(x, y + 1, BLACK, leds);
+    setLed(x, y - 1, BLACK, leds);
   } else if (elapsed >= 400 && elapsed < 700) {
     setLed(x + 1, y, c, leds);
     setLed(x - 1, y, c, leds);
@@ -74,6 +81,5 @@ void animateRing(unsigned long elapsed, CRGB c, State next, bool outward, int x,
     setLed(x, y - 1, c, leds);
   } else if (elapsed >= 800 && elapsed <= 1100) {
     setLed(x, y, c, leds);
-  } else
-    updateState(next);
+  }
 }
