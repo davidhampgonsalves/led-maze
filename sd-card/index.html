@@ -1,19 +1,23 @@
 <!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <html>
     <head>
       <style>
         body {
+          display: flex;
+          justify-content: center;
+          align-items: center;
           height: 90vh;
           background: #031a00;
           color: green;
           font-family: monospace;
-          font-size: 18px;
+          font-size: 15px;
           text-shadow: 0 0 0.04em #00dc58;
+          margin: 2em 0.5em 0;
         }
 
         #content-container {
           width: 470px;
-          margin: 2em auto 0;
         }
 
         #content {
@@ -108,20 +112,12 @@
 
       <script>
         const INTRO_CONTENT = `
-
-
-
-
-
-
-
-
-    ███╗   ███╗ █████╗ ███████╗███████╗
-    ████╗ ████║██╔══██╗╚══███╔╝██╔════╝
-    ██╔████╔██║███████║  ███╔╝ █████╗
-    ██║╚██╔╝██║██╔══██║ ███╔╝  ██╔══╝
-    ██║ ╚═╝ ██║██║  ██║███████╗███████╗
-    ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝
+     ███╗   ███╗ █████╗ ███████╗███████╗
+     ████╗ ████║██╔══██╗╚══███╔╝██╔════╝
+     ██╔████╔██║███████║  ███╔╝ █████╗
+     ██║╚██╔╝██║██╔══██║ ███╔╝  ██╔══╝
+     ██║ ╚═╝ ██║██║  ██║███████╗███████╗
+     ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝
 
 
                TAP TO BEGIN...`;
@@ -129,12 +125,12 @@
         const WELCOME_CONTENT = `
 
 
-    ░░░╗   ░░░╗ ░░░░░╗ ░░░░░░░╗░░░░░░░╗
-    ░░░░╗ ░░░░║░░╔══░░╗╚══░░░╔╝░░╔════╝
-    ░░╔░░░░╔░░║░░░░░░░║  ░░░╔╝ ░░░░░╗
-    ░░║╚░░╔╝░░║░░╔══░░║ ░░░╔╝  ░░╔══╝
-    ░░║ ╚═╝ ░░║░░║  ░░║░░░░░░░╗░░░░░░░╗
-    ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝
+     ░░░╗   ░░░╗ ░░░░░╗ ░░░░░░░╗░░░░░░░╗
+     ░░░░╗ ░░░░║░░╔══░░╗╚══░░░╔╝░░╔════╝
+     ░░╔░░░░╔░░║░░░░░░░║  ░░░╔╝ ░░░░░╗
+     ░░║╚░░╔╝░░║░░╔══░░║ ░░░╔╝  ░░╔══╝
+     ░░║ ╚═╝ ░░║░░║  ░░║░░░░░░░╗░░░░░░░╗
+     ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝
 
 
 
@@ -159,12 +155,12 @@
       const ABOUT_CONTENT = `
 
 
- ▒▒▒▒▒╗ ▒▒▒▒▒▒╗  ▒▒▒▒▒▒╗ ▒▒╗   ▒▒╗▒▒▒▒▒▒▒▒╗
-▒▒╔══▒▒╗▒▒╔══▒▒╗▒▒╔═══▒▒╗▒▒║   ▒▒║╚══▒▒╔══╝
-▒▒▒▒▒▒▒║▒▒▒▒▒▒╔╝▒▒║   ▒▒║▒▒║   ▒▒║   ▒▒║
-▒▒╔══▒▒║▒▒╔══▒▒╗▒▒║   ▒▒║▒▒║   ▒▒║   ▒▒║
-▒▒║  ▒▒║▒▒▒▒▒▒╔╝╚▒▒▒▒▒▒╔╝╚▒▒▒▒▒▒╔╝   ▒▒║
-╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝
+  ▒▒▒▒▒╗ ▒▒▒▒▒▒╗  ▒▒▒▒▒▒╗ ▒▒╗   ▒▒╗▒▒▒▒▒▒▒▒╗
+ ▒▒╔══▒▒╗▒▒╔══▒▒╗▒▒╔═══▒▒╗▒▒║   ▒▒║╚══▒▒╔══╝
+ ▒▒▒▒▒▒▒║▒▒▒▒▒▒╔╝▒▒║   ▒▒║▒▒║   ▒▒║   ▒▒║
+ ▒▒╔══▒▒║▒▒╔══▒▒╗▒▒║   ▒▒║▒▒║   ▒▒║   ▒▒║
+ ▒▒║  ▒▒║▒▒▒▒▒▒╔╝╚▒▒▒▒▒▒╔╝╚▒▒▒▒▒▒╔╝   ▒▒║
+ ╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝
 
 
 
@@ -213,7 +209,11 @@ const PLAY_CONTENT = `
 
 
 
-                                        `;
+
+
+
+
+                                          `;
       </script>
 
       <script type="module">
@@ -286,7 +286,11 @@ const PLAY_CONTENT = `
         function onMessage(event) {
           console.log("onMessage:", event.data)
 
-          playSound(event.data.url);
+          const { type, url } = JSON.parse(event.data);
+          if(type == "PLAY_SONG")
+            playSong(url);
+          else if(type == "PLAY_SOUND")
+            playSound(url);
         }
 
         function log(...args) {
@@ -296,8 +300,8 @@ const PLAY_CONTENT = `
           consoleEl.appendChild(el);
         }
         function initConsole() {
-          console.log = log
-          console.error = log
+          console.log = log;
+          console.error = log;
 
           const consoleEl = document.querySelector("#console");
           document.querySelector("#console-toggle").addEventListener("click", () => {
@@ -379,7 +383,7 @@ const PLAY_CONTENT = `
 
         function play() {
           stopSong();
-          playSound("music/get-ready.wav");
+          playSound("sounds/get-ready.wav");
           display(PLAY_CONTENT, () => {});
         }
 

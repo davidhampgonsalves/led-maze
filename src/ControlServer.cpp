@@ -10,12 +10,15 @@
 #include "state.h"
 #include "Game.h"
 #include "file.h"
+#include <SD.h>
+
+ControlServer server;
 
 // Replace with your network credentials
 const char *ssid = "orange";
 const char *password = "isacolor";
 
-static AsyncWebServer server(80);
+static AsyncWebServer webServer(80);
 static AsyncWebSocketMessageHandler wsHandler;
 static AsyncWebSocket ws("/ws", wsHandler.eventHandler());
 
@@ -24,9 +27,29 @@ void ControlServer::cleanupWsClients() {
   ws.cleanupClients();
 }
 
-
 ControlServer::ControlServer() {
-  readFile("/index.html", indexData);
+}
+
+void ControlServer::playSong(const char* path) {
+  // const size_t len = measureJson(doc);
+  // AsyncWebSocketMessageBuffer* buffer = _ws->makeBuffer(len);
+  // serializeJson(doc, buffer->get(), len);
+  // ws->textAll(buffer);
+
+  ws.printfAll("{\"type\":\"PLAY_SONG\",\"url\":\"%s\"}", path);
+}
+
+void ControlServer::playSound(const char* path) {
+  // const size_t len = measureJson(doc);
+  // AsyncWebSocketMessageBuffer* buffer = _ws->makeBuffer(len);
+  // serializeJson(doc, buffer->get(), len);
+  // ws->textAll(buffer);
+
+  ws.printfAll("{\"type\":\"PLAY_SOUND\",\"url\":\"%s\"}", path);
+}
+
+void ControlServer::stopSong() {
+  // TODO
 }
 
 void ControlServer::connect() {
@@ -41,14 +64,20 @@ void ControlServer::connect() {
   // Print ESP32 Local IP Address
   Serial.println(WiFi.localIP());
 
+  // readFile("/index.html", indexData);
+
   // Route for root / web page
-  server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
-    request->send(200, "text/html", indexData);
+  webServer.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    // request->send(200, "text/html", indexData);
+    if(!SD.begin(5)){
+      Serial.println("Card Mount Failed");
+      return;
+    }
+    request->send(SD, "/index.html", "text/html; charset=utf-8");
   });
 
   wsHandler.onConnect([](AsyncWebSocket *server, AsyncWebSocketClient *client) {
     Serial.printf("Client %" PRIu32 " connected\n", client->id());
-    server->textAll("New client: " + String(client->id()));
 
     updateState(GAME_START);
   });
@@ -90,6 +119,6 @@ void ControlServer::connect() {
     Serial.printf("Client %" PRIu32 " fragment %" PRIu32 ": %s\n", client->id(), frameInfo->num, (const char *)data);
   });
 
-  server.addHandler(&ws);
-  server.begin();
+  webServer.addHandler(&ws);
+  webServer.begin();
 }

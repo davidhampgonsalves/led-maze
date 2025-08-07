@@ -5,6 +5,11 @@ class ControlServer {
     ControlServer();
     void cleanupWsClients();
     void connect();
+    void playSong(const char* path);
+    void playSound(const char* path);
+    void stopSong();
   private:
     char indexData[7000];
 };
+
+extern ControlServer server;

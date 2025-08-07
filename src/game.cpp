@@ -5,9 +5,9 @@
 #include <common.h>
 #include <math.h>
 #include <state.h>
+#include "ControlServer.h"
 #include <text.h>
 #include <vector>
-#include "audio.h"
 
 #include "Game.h"
 #include "Level.h"
@@ -48,16 +48,16 @@ void Game::start(int lvl, bool isRestart) {
 
   switch (lvl) {
   case 1:
-    playSong("/music/sparky.wav");
+    server.playSong("music/sparky.wav");
     break;
   case 2:
-    playSong("/music/spooky.wav");
+    server.playSong("music/spooky.wav");
     break;
   case 3:
-    playSong("/music/choir.wav");
+    server.playSong("music/choir.wav");
     break;
   default:
-    playSong("/music/choir.wav");
+    server.playSong("music/choir.wav");
   }
 }
 
@@ -135,15 +135,15 @@ void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
     wall(prevX, prevY, prevPosX, prevPosY);
     break;
   case FINISH:
-    playSound("/sounds/win.wav");
+    server.playSound("sounds/win.wav");
     updateState(PLAYING_LEVEL_END);
     break;
   case FIRE:
-    playSound("/sounds/death.wav");
+    server.playSound("sounds/death.wav");
     updateState(PLAYING_DEATH);
     break;
   case SLOW:
-    playSound("/sounds/slow.wav");
+    server.playSound("sounds/slow.wav");
     break;
   case PORTAL:
     bool canWarp = warp(prevX, prevY);
@@ -185,7 +185,7 @@ void Game::levelStart(unsigned long elapsed, CRGB leds[]) {
 static long prevScore;
 void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
   if (elapsed == 0) {
-    stopSong();
+    server.stopSong();
     prevScore = score;
     score += 100;
     Serial.println(levelTimer);
@@ -199,7 +199,7 @@ void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
     int countUp = prevScore;
     if (elapsed > 700 && elapsed < 1700) {
       countUp = ((static_cast<float>(elapsed - 700) / 1000.0) * (score - prevScore)) + prevScore;
-      playSound("/sounds/count.wav");
+      server.playSound("sounds/count.wav");
     }
     if (elapsed >= 1700)
       countUp = score;
@@ -232,7 +232,7 @@ void Game::loseLife(unsigned long elapsed, CRGB leds[]) {
   }
 }
 
-void Game::checkDiags(int prevX, int prevY, int prevPosX, int prevPosY)) {
+void Game::checkDiags(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (x == prevX || y == prevY) return;
 
   int adjX = (x > prevX ? -1 : 1) + x;
@@ -241,8 +241,8 @@ void Game::checkDiags(int prevX, int prevY, int prevPosX, int prevPosY)) {
     x = prevX;
     y = prevY;
 
-    xPos = prevPosX;
-    yPos = prevYPos;
+    posX = prevPosX;
+    posY = prevPosY;
 
     velX = -BOUNCE * velX;
     velY = -BOUNCE * velY;
@@ -270,7 +270,7 @@ bool Game::warp(int prevX, int prevY) {
 
   if (level->at(posToIndex(tmpXPos), posToIndex(tmpYPos)) == EMPTY) {
     updatePos(tmpXPos, tmpYPos);
-    playSound("/sounds/portal.wav");
+    server.playSound("sounds/portal.wav");
     return true;
   } else {
     return false;

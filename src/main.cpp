@@ -7,14 +7,12 @@
 #include "text.h"
 #include "state.h"
 #include "file.h"
-#include "audio.h"
 
 #define NUM_LEDS 300
 #define DATA_PIN 25
 #define RELAY_PIN 27
 CRGB leds[NUM_LEDS];
 
-ControlServer *server;
 std::vector<HighScore> scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
@@ -27,10 +25,8 @@ void setup(){
   Serial.println(ESP.getFreeHeap());
 
   initSd();
-  initAudio();
 
-  server = new ControlServer();
-  server->connect();
+  server.connect();
   Serial.println("Server is connected.");
 
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);  // GRB ordering is assumed
@@ -73,8 +69,7 @@ void gameStart(unsigned long elapsed) {
 }
 
 void gameStartInit() {
-  stopSong();
-  playSound("/sounds/get-ready.wav");
+  server.stopSong();
 }
 
 void gameEnd(unsigned long elapsed) {
@@ -99,7 +94,7 @@ void gameOver(unsigned long elapsed) {
   deadLevel->draw(elapsed, leds);
 }
 void gameOverInit() {
-  playSound("/sounds/game-over.wav");
+  server.playSound("/sounds/game-over.wav");
 }
 
 void title(unsigned long elapsed) {
@@ -110,7 +105,7 @@ void title(unsigned long elapsed) {
     updateState(HIGH_SCORES);
 }
 
-void titleInit() { playSong("/music/title.wav"); }
+void titleInit() { server.playSong("/music/title.wav"); }
 
 void highScore(unsigned long elapsed) {
     // custome level
@@ -124,7 +119,7 @@ void highScore(unsigned long elapsed) {
 
 void highScoreInit() {
   // TODO: prompt user for name
-  // playSound("/sounds/high-score.wav");
+  // server.playSound("/sounds/high-score.wav");
   writeHighScore(std::string{"abc"}, game.score);
 }
 
@@ -158,7 +153,7 @@ void loop() {
   FastLED.clear();
 
   if (now - lastWS >= deltaWS) {
-    server->cleanupWsClients();
+    server.cleanupWsClients();
     lastWS = millis();
   }
 
@@ -218,6 +213,5 @@ void loop() {
 
   // TODO: display frame time every 5 seconds
   FastLED.show();
-  playAudio();
   prev = now;
 }
