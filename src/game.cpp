@@ -30,7 +30,7 @@ void Game::start(int lvl, bool isRestart) {
   level = new Level(lvl);
   accelX, accelY = 0;
 
-  if (lvl == 1) {
+  if (lvl == 1 && !isRestart) {
     score = 0;
     lives = 3;
   }
@@ -105,8 +105,8 @@ void Game::update(int interval) {
 
   int prevX = x;
   int prevY = y;
-  double prevPosX = posX;
-  double prevPosY = posY;
+  int prevPosX = posX;
+  int prevPosY = posY;
 
   posX = posX + interval * velX;
   posY = posY + interval * velY;
@@ -120,7 +120,7 @@ void Game::update(int interval) {
   checkCollisions(prevX, prevY, prevPosX, prevPosY);
 }
 
-void Game::checkCollisions(int prevX, int prevY, double prevPosX, double prevPosY) {
+void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (x == prevX && y == prevY) return; // haven't entered new px
 
   int px = level->at(x, y);
@@ -129,7 +129,7 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX, double prevPos
   Serial.printf("%d/%d-vs %d/%d\n", x, y, prevX, prevY);
   switch (px) {
   case EMPTY:
-    checkDiags(prevX, prevY);
+    checkDiags(prevX, prevY, prevPosX, prevPosY);
     break;
   case WALL:
     wall(prevX, prevY, prevPosX, prevPosY);
@@ -141,6 +141,9 @@ void Game::checkCollisions(int prevX, int prevY, double prevPosX, double prevPos
   case FIRE:
     playSound("/sounds/death.wav");
     updateState(PLAYING_DEATH);
+    break;
+  case SLOW:
+    playSound("/sounds/slow.wav");
     break;
   case PORTAL:
     bool canWarp = warp(prevX, prevY);
@@ -229,51 +232,31 @@ void Game::loseLife(unsigned long elapsed, CRGB leds[]) {
   }
 }
 
-void Game::checkDiags(int prevX, int prevY) {
-  // need to check diags to see if allowed
-  if (x == prevX || y == prevY)
-    return; // not diag
+void Game::checkDiags(int prevX, int prevY, int prevPosX, int prevPosY)) {
+  if (x == prevX || y == prevY) return;
 
   int adjX = (x > prevX ? -1 : 1) + x;
   int adjY = (y > prevY ? -1 : 1) + y;
   if (level->at(adjX, y) == WALL && level->at(x, adjY) == WALL) {
     x = prevX;
-    velX = -BOUNCE * velX;
-
     y = prevY;
+
+    xPos = prevPosX;
+    yPos = prevYPos;
+
+    velX = -BOUNCE * velX;
     velY = -BOUNCE * velY;
   }
 }
 
 void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
-  // check speed in direction that is hitting wall
-  bool isImpactInX = x != prevX && level->at(x, prevY) == WALL;
-  bool isImpactInY = y != prevY && level->at(prevX, y) == WALL;
+  if (level->at(x, prevY) == WALL) { velX = -BOUNCE * velX; }
+  if (level->at(prevX, y) == WALL) { velY = -BOUNCE * velY; }
 
-  // Serial.printf("%d, %f, %d, %f\n", isImpactInX, abs(velX), isImpactInY, abs(velY));
-  if ((isImpactInX && abs(velX) > 10) || (isImpactInY && abs(velY) > 10)) {
-    playSound("/sounds/bounce.wav");
-    if(level->isPx(x, y, BREAKABLE_WALL)) level->breakPx(x, y);
-  }
-
-  int collisionX = x % PX_SIZE;
-  int collisionY = y % PX_SIZE;
-  bool isOverCenterX = collisionX > PX_CENTER;
-  bool isOverCenterY = collisionY > PX_CENTER;
-
-  if (isImpactInX) {
-    velX = -BOUNCE * velX;
-
-    x = prevX;
-    posX = prevPosX;
-  }
-
-  if (isImpactInY) {
-    velY = -BOUNCE * velY;
-
-    y = prevY;
-    posY = prevPosY;
-  }
+  x = prevX;
+  y = prevY;
+  posX = prevPosX;
+  posY = prevPosY;
 }
 
 bool Game::warp(int prevX, int prevY) {

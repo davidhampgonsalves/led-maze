@@ -21,8 +21,8 @@ class Game{
     long score;
   private:
     double applyFriction(unsigned long elapsed, double vel);
-    void checkCollisions(int prevX, int prevY, double prevPosX, double prevPosY);
-    void checkDiags(int prevX, int prevY);
+    void checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY);
+    void checkDiags(int prevX, int prevY, int prevPosX, int prevPosY);
     void levelStart(unsigned long elapsed, CRGB leds[]);
     void levelEnd(unsigned long elapsed, CRGB leds[]);
     void death(unsigned long elapsed, CRGB leds[]);

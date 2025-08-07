@@ -3,31 +3,45 @@
 #include "AudioTools/AudioLibs/AudioESP32ULP.h"
 #include "SD.h"
 
-WAVDecoder wav;
-WAVDecoder effectWav;
 AudioESP32ULP out;
-
-EncodedAudioOutput decoder(&out, &wav);  // Decoding stream
-EncodedAudioOutput effectDecoder(&out, &effectWav);  // Decoding stream
 AudioInfo info(8000, 1, 16);
+
 File soundFile;
 File songFile;
-OutputMixer<int16_t> mixer(out, 2); // if you set this to 2 (as I think you should) audio plays too fast
-StreamCopy copier(mixer, songFile);
-StreamCopy effectCopier(mixer, soundFile);
+
+WAVDecoder wav;
+WAVDecoder effectWav;
+
+InputMixer<int16_t> mixer;
+
+// EncodedAudioOutput decoder(&out, &wav);  // Decoding stream
+// EncodedAudioOutput effectDecoder(&out, &effectWav);  // Decoding stream
+
+// OutputMixer<int16_t> mixer(out, 2); // if you set this to 2 (as I think you should) audio plays too fast
+
+StreamCopy copier(out, mixer);
+// StreamCopy effectCopier(mixer, volume);
+
+
+// PoppingSoundRemover<int16_t> converter(1, true, true);
+// VolumeStream volume(soundFile);
 
 void playSong(const char* path) {
-  Serial.printf("playing song %s\n", path);
+  // Serial.printf("playing song %s\n", path);
 
-  if(songFile != NULL) songFile.close();
-  songFile = SD.open(path);
+  if(songFile) songFile.close();
+  // songFile = SD.open(path);
+  songFile = SD.open("/sounds/silence.wav");
 }
 
 void playSound(const char* path) {
-  if(!effectCopier.isActive()) return; // only one sound at a time
+  // if(!effectCopier.isActive()) return; // only one sound at a time
 
-  if(soundFile != NULL) soundFile.close();
-  soundFile = SD.open(path);
+  // volume.setVolume(0);
+  // if(soundFile) soundFile.close();
+  // soundFile = SD.open(path);
+  soundFile = SD.open("/sounds/silence.wav");
+  // volume.setVolume(100);
 }
 
 void initAudio() {
@@ -40,22 +54,26 @@ void initAudio() {
   out.setMonoDAC(ULP_DAC2);
   out.begin(config);
 
+  mixer.add(wav);
+  mixer.add(effectWav);
   mixer.begin();
 
   // always need to play something so that the steams are in sync
   playSound("/sounds/silence.wav");
   playSong("/sounds/silence.wav");
 
-  decoder.begin();
-  effectDecoder.begin();
+  // copier.setMinCopySize(1);
+
+  // decoder.begin();
+  // effectDecoder.begin();
 }
 
 void playAudio() {
-  if(!copier.available()) songFile.seek(0);
-  if(!effectCopier.available()) playSound("/sounds/silence.wav");
+  // if(!copier.available()) songFile.seek(0);
+  // if(!effectCopier.available()) playSound("/sounds/silence.wav");
 
   copier.copy();
-  effectCopier.copy();
+  // effectCopier.copy();
 }
 
 void stopSong() {

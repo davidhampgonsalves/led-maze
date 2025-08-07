@@ -5,3 +5,5 @@ ffmpeg -i spooky.wav -ac 1 -ar 8000 -acodec pcm_s16le ../sd-card/music/spooky.wa
 
 ffmpeg -i game-over.wav -ac 1 -ar 8000 -acodec pcm_s16le ../sd-card/sounds/game-over.wav
 ffmpeg -i get-ready.wav -ac 1 -ar 8000 -acodec pcm_s16le ../sd-card/sounds/get-ready.wav
+
+ffmpeg -i title.wav -ac 1 -ar 8000 -f s16le -acodec pcm_s16le ../sd-card/music/title.pcm
