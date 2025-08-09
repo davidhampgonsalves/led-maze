@@ -7,21 +7,6 @@ enum Px { EMPTY, WALL, BREAKABLE_WALL, FIRE, SLOW, FINISH, START, PORTAL, H_WALL
 
 const uint8_t LEVEL_COUNT = 14;
 
-const CRGB EMPTY_RGB = CRGB(255, 255, 255);
-const CRGB FIRE_RGB = CRGB(255, 0, 0);
-const CRGB START_RGB = CRGB(255, 0, 255);
-const CRGB FINISH_RGB = CRGB(0, 255, 0);
-const CRGB PORTAL_RGB = CRGB(0, 101, 255);
-const CHSV PORTAL_HSV = CHSV(216, 100, 100); // used by shimmer
-const CRGB BREAKABLE_WALL_RGB = CRGB(150, 150, 150);
-const CRGB SLOW_RGB = CRGB(120, 170, 110);
-const CHSV SLOW_HSV = CHSV(110, 35, 66); // used by shimmer
-
-const CRGB H_FIRE_RGB = CRGB(1, 0, 0);
-const CRGB H_WALL_RGB = CRGB(1, 1, 1);
-const CRGB H_FINISH_RGB = CRGB(0, 1, 0);
-const CRGB H_PORTAL_RGB = CRGB(0, 0, 1);
-
 class Level {
   public:
     Level(const char *path);

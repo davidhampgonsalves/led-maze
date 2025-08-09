@@ -2,6 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <html>
     <head>
+      <meta charset="UTF-8">
       <style>
         body {
           display: flex;
@@ -9,10 +10,10 @@
           align-items: center;
           height: 90vh;
           background: #031a00;
-          color: green;
+          color: #00ff00;
           font-family: monospace;
-          font-size: 15px;
-          text-shadow: 0 0 0.04em #00dc58;
+          font-size: 13px;
+          /* text-shadow: 0 0 1px #99dd99; */
           margin: 2em 0.5em 0;
         }
 
@@ -24,7 +25,7 @@
           white-space-collapse: preserve;
         }
 
-        body::after {
+        /* body::after {
           pointer-events: none;
           content: "";
           position: absolute;
@@ -33,7 +34,7 @@
           width: 100vw;
           height: 100vh;
           background: repeating-linear-gradient(0deg, rgba(0,0,0, 0.5), rgba(0, 0, 0, 0.5) 1px, transparent 0px, transparent 2px)
-        }
+        } */
 
         #tune, #console {
           display: none;
@@ -76,10 +77,26 @@
 
         #play span {
           position: absolute;
-          top: 185px;
-          left: 228px;
+          top: 140px;
+          left: 180px;
           font-size: 1.2em;
         }
+
+        input#name {
+          background: none;
+          border: none;
+          border-bottom: solid 3px #00ff00;
+          color: #00ff00;
+          text-align: center;
+          font-size: 18px;
+          width: 50px;
+          text-transform: uppercase;
+          padding: 3px;
+        }
+
+        /* input[switch] { */
+          /* display: none; */
+        /* } */
 
         @keyframes blink-caret {
           from, to {
@@ -100,7 +117,6 @@
       </div>
 
       <div id="console">
-        # Console
       </div>
 
       <div id="tune">
@@ -120,7 +136,11 @@
      ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝
 
 
-               TAP TO BEGIN...`;
+     TURN UP THE VOLUME + ENABLE HAPTICS
+
+                      &
+
+                TAP TO BEGIN`;
 
         const WELCOME_CONTENT = `
 
@@ -133,21 +153,24 @@
      ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝
 
 
+        TILT YOUR PHONE TO GUIDE YOUR
+
+             MARBLE TO FREEDOM
 
 <span id=start>
-            ╔═══════════════╗
-            ║               ║
-            ║     START     ║
-            ║               ║
-            ╚═══════════════╝
+             ╔═══════════════╗
+             ║               ║
+             ║     START     ║
+             ║               ║
+             ╚═══════════════╝
 </span>
 
 <span id=about>
-            ╔═══════════════╗
-            ║               ║
-            ║     ABOUT     ║
-            ║               ║
-            ╚═══════════════╝
+             ╔═══════════════╗
+             ║               ║
+             ║     ABOUT     ║
+             ║               ║
+             ╚═══════════════╝
 </span>
 
                                           `;
@@ -155,12 +178,12 @@
       const ABOUT_CONTENT = `
 
 
-  ▒▒▒▒▒╗ ▒▒▒▒▒▒╗  ▒▒▒▒▒▒╗ ▒▒╗   ▒▒╗▒▒▒▒▒▒▒▒╗
- ▒▒╔══▒▒╗▒▒╔══▒▒╗▒▒╔═══▒▒╗▒▒║   ▒▒║╚══▒▒╔══╝
- ▒▒▒▒▒▒▒║▒▒▒▒▒▒╔╝▒▒║   ▒▒║▒▒║   ▒▒║   ▒▒║
- ▒▒╔══▒▒║▒▒╔══▒▒╗▒▒║   ▒▒║▒▒║   ▒▒║   ▒▒║
- ▒▒║  ▒▒║▒▒▒▒▒▒╔╝╚▒▒▒▒▒▒╔╝╚▒▒▒▒▒▒╔╝   ▒▒║
- ╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝
+   ▒▒▒▒▒╗ ▒▒▒▒▒▒╗  ▒▒▒▒▒▒╗ ▒▒╗   ▒▒╗▒▒▒▒▒▒▒▒╗
+  ▒▒╔══▒▒╗▒▒╔══▒▒╗▒▒╔═══▒▒╗▒▒║   ▒▒║╚══▒▒╔══╝
+  ▒▒▒▒▒▒▒║▒▒▒▒▒▒╔╝▒▒║   ▒▒║▒▒║   ▒▒║   ▒▒║
+  ▒▒╔══▒▒║▒▒╔══▒▒╗▒▒║   ▒▒║▒▒║   ▒▒║   ▒▒║
+  ▒▒║  ▒▒║▒▒▒▒▒▒╔╝╚▒▒▒▒▒▒╔╝╚▒▒▒▒▒▒╔╝   ▒▒║
+  ╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝
 
 
 
@@ -172,15 +195,15 @@ Can you escape the dungeon fast enough to be imortalized in the hall of fame or 
 
 
 
-        Created by: David Hamp-Gonsalves
+    Created by: David Hamp-Gonsalves
 
 
 <span id=back>
-            ╔═══════════════╗
-            ║               ║
-            ║    ← BACK     ║
-            ║               ║
-            ╚═══════════════╝
+             ╔═══════════════╗
+             ║               ║
+             ║    ← BACK     ║
+             ║               ║
+             ╚═══════════════╝
 </span>
                                           `;
 
@@ -214,8 +237,73 @@ const PLAY_CONTENT = `
 
 
                                           `;
+
+const HIGH_SCORE_CONTENT = `
+
+
+         ▒▒╗  ▒▒╗▒▒╗ ▒▒▒▒▒▒╗ ▒▒╗  ▒▒╗
+         ▒▒║  ▒▒║▒▒║▒▒╔════╝ ▒▒║  ▒▒║
+         ▒▒▒▒▒▒▒║▒▒║▒▒║  ▒▒▒╗▒▒▒▒▒▒▒║
+         ▒▒╔══▒▒║▒▒║▒▒║   ▒▒║▒▒╔══▒▒║
+         ▒▒║  ▒▒║▒▒║╚▒▒▒▒▒▒╔╝▒▒║  ▒▒║
+         ╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝
+
+
+   ▒▒▒▒▒▒▒╗ ▒▒▒▒▒▒╗ ▒▒▒▒▒▒╗ ▒▒▒▒▒▒╗ ▒▒▒▒▒▒▒╗
+   ▒▒╔════╝▒▒╔════╝▒▒╔═══▒▒╗▒▒╔══▒▒╗▒▒╔════╝
+   ▒▒▒▒▒▒▒╗▒▒║     ▒▒║   ▒▒║▒▒▒▒▒▒╔╝▒▒▒▒▒╗
+   ╚════▒▒║▒▒║     ▒▒║   ▒▒║▒▒╔══▒▒╗▒▒╔══╝
+   ▒▒▒▒▒▒▒║╚▒▒▒▒▒▒╗╚▒▒▒▒▒▒╔╝▒▒║  ▒▒║▒▒▒▒▒▒▒╗
+   ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
+
+
+
+                    <input maxLength=3 id=name />
+
+
+<span id=submit>
+               ╔═══════════════╗
+               ║               ║
+               ║     Enter     ║
+               ║               ║
+               ╚═══════════════╝
+</span>
+
+
+                                          `;
       </script>
 
+      <script>
+        /**
+         * ios-haptics v0.1.0
+         * tijn.dev
+         * @license MIT
+         */
+        function haptic() {
+          try {
+            if (navigator.vibrate) {
+              navigator.vibrate(50)
+              return
+            }
+
+            const labelEl = document.createElement('label')
+            labelEl.ariaHidden = 'true'
+            labelEl.style.display = 'none'
+
+            const inputEl = document.createElement('input')
+            inputEl.type = 'checkbox'
+            inputEl.setAttribute('switch', '')
+            labelEl.appendChild(inputEl)
+
+            document.head.appendChild(labelEl)
+            labelEl.click()
+            document.head.removeChild(labelEl)
+          }
+          catch {
+            // do nothing
+          }
+        };
+      </script>
       <script type="module">
         const contentEl = document.querySelector("#content");
 
@@ -246,6 +334,15 @@ const PLAY_CONTENT = `
           }
 
           animate();
+        }
+
+        function vibrate() {
+          // switchEl.checked = !switchEl.checked;
+          haptic();
+        }
+        function multiVibrate(count) {
+          for(let i=0 ; i < count ; i++)
+            window.setTimeout(vibrate, i * 100);
         }
 
         let wakeLock = null;
@@ -286,18 +383,24 @@ const PLAY_CONTENT = `
         function onMessage(event) {
           console.log("onMessage:", event.data)
 
-          const { type, url } = JSON.parse(event.data);
+          const { type, url, score } = JSON.parse(event.data);
           if(type == "PLAY_SONG")
             playSong(url);
-          else if(type == "PLAY_SOUND")
+          else if(type == "PLAY_SOUND") {
             playSound(url);
+            if(url.endsWith("bounce.wav")) vibrate();
+            if(url.endsWith("death.wav")) multiVibrate(3);
+          } else if(type == "HIGH_SCORE") {
+            highScore(score);
+            playSound("sounds/high-score.wav");
+          }
         }
 
         function log(...args) {
           const consoleEl = document.querySelector("#console");
           const el = document.createElement('div');
           el.innerText = args.join(", ");
-          consoleEl.appendChild(el);
+          consoleEl.prepend(el);
         }
         function initConsole() {
           console.log = log;
@@ -305,6 +408,7 @@ const PLAY_CONTENT = `
 
           const consoleEl = document.querySelector("#console");
           document.querySelector("#console-toggle").addEventListener("click", () => {
+            vibrate();
             if(consoleEl.style.display == "block")
               consoleEl.style.display = "none";
             else
@@ -314,24 +418,27 @@ const PLAY_CONTENT = `
 
         let lastSendTime = 0;
         function handleOrientationEvent(event, posEl) {
-          if(event.beta == null) {
+          const { beta, gamma } = event;
+          if(beta == null) {
             console.log("beta not set");
             return;
           }
 
-          console.log(event.beta, event.gamma);
-          posEl.style.top = 185 + (event.beta / 1);
-          posEl.style.left = 228 + (event.gamma / 1);
-
           const now = Date.now();
-          if (now - lastSendTime >= 300) {
+          if (now - lastSendTime >= 100) {
             lastSendTime = now;
-            console.log("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
+            // console.log("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
             websocket.send("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
+
+            console.log(beta, gamma);
+            const posEl = document.querySelector("#play span");
+            posEl.style.top = 140 + (beta / 90 * 95) + "px";
+            posEl.style.left = 180 + (gamma / 90 * 115) + "px";
           }
         }
 
         async function start(e) {
+          vibrate();
           await ensureDevicePermissions();
           await requestWakeLock();
           play();
@@ -362,6 +469,7 @@ const PLAY_CONTENT = `
         document.querySelectorAll("#debug input").forEach(e => e.addEventListener("blur", handleSettingChange));
 
         function welcome() {
+          vibrate();
           document.querySelector("body").removeEventListener("click", welcome);
           playSong("music/title.wav", true);
           display(WELCOME_CONTENT, () => {
@@ -371,6 +479,7 @@ const PLAY_CONTENT = `
         }
 
         function about() {
+          vibrate();
           display(ABOUT_CONTENT, () => {
             document.querySelector("#back").addEventListener("click", welcome);
           });
@@ -378,13 +487,34 @@ const PLAY_CONTENT = `
 
         function intro() {
           document.querySelector("body").addEventListener("click", welcome);
-          display(INTRO_CONTENT, () => {}, { flicker: true, frameDelay: 6 });
+          display(INTRO_CONTENT, () => {}, { flicker: true, frameDelay: 8 });
+        }
+
+        function highScore(score) {
+          vibrate();
+          display(HIGH_SCORE_CONTENT, () => {
+            document.querySelector("#submit").addEventListener("click", (e) => {
+              vibrate();
+              const inputEl = document.querySelector("input");
+              const value = inputEl.value.trim();
+              if(value !== "") {
+                websocket.send("highscore:" + score + "," + value);
+                welcome();
+                return;
+              }
+
+              inputEl.style.border = "solid 2px red";
+            });
+          });
         }
 
         function play() {
+          vibrate();
           stopSong();
           playSound("sounds/get-ready.wav");
-          display(PLAY_CONTENT, () => {});
+          display(PLAY_CONTENT, () => {
+            vibrate();
+          });
         }
 
         let song = null;
@@ -400,21 +530,38 @@ const PLAY_CONTENT = `
         }
 
         function playSound(url) {
+          const source = audioContext.createBufferSource();
           url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/" + url;
-          const sound = new Audio(url);
-          sound.addEventListener("canplaythrough", (event) => {
-            sound.play();
-          });
-          return sound;
+          source.buffer = soundBuffers[url];
+          source.connect(audioContext.destination);
+          source.start(0);
+
+          source.onended = () => {
+              source.disconnect();
+          };
+        }
+
+        const SOUND_PATHS = ["sm-bounce", "bounce", "death", "portal", "slow", "count", "get-ready", "win", "spawn"];
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const soundBuffers = {};
+        function preloadSounds() {
+          SOUND_PATHS.forEach(async path => {
+            const url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/sounds/" + path + ".wav";
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            soundBuffers[url] = await audioContext.decodeAudioData(arrayBuffer);
+          })
         }
 
         function stopSong() {
           if(song) song.pause();
-        }
+         }
 
+        preloadSounds();
         intro();
         // initConsole();
       </script>
+      <audio id="music" src="https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/sounds/count.wav"></audio>
     </body>
     </html>
     <script>

@@ -18,7 +18,7 @@ void setLed(int x, int y, CHSV c, CRGB leds[]);
 void setLed(int x, int y, CRGB c, CRGB leds[]);
 int indexToPos(int xy);
 int posToIndex(unsigned long xy);
-CRGB colorAt(int x, int y, CRGB leds[]);
+CRGB colorAt(int x, int y, CRGB level[]);
 void setFlameLed(int x, int y, CRGB leds[]);
 void setShimmerLed(unsigned long elapsed, int x, int y, CHSV c, CRGB leds[]);
 void animateRing(unsigned long elapsed, CRGB c, State next, bool outward, int x, int y, CRGB leds[]);

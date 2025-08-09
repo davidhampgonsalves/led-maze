@@ -74,7 +74,10 @@ void gameStartInit() {
 
 void gameEnd(unsigned long elapsed) {
   if(elapsed > 1500) {
-    updateState(TITLE);
+    if(isHighScore(game.score))
+      updateState(HIGH_SCORE);
+    else
+      updateState(TITLE);
     return;
   }
 
@@ -84,9 +87,8 @@ void gameEnd(unsigned long elapsed) {
 
 void gameOver(unsigned long elapsed) {
   if(elapsed > 5000) {
-    if(isHighScore(game.score)) {
-      // TODO: prompt user for highscore info
-    }
+    if(isHighScore(game.score))
+      updateState(HIGH_SCORE);
     return updateState(TITLE);
   }
 
@@ -108,19 +110,14 @@ void title(unsigned long elapsed) {
 void titleInit() { server.playSong("/music/title.wav"); }
 
 void highScore(unsigned long elapsed) {
-    // custome level
-    if(elapsed < WORD_WAIT) {
+    if(elapsed % (WORD_WAIT * 2) < WORD_WAIT)
       write("high", leds);
-    } else if(elapsed < WORD_WAIT * 2)
-      write("score", leds);
     else
-      updateState(TITLE);
+      write("score", leds);
 }
 
 void highScoreInit() {
-  // TODO: prompt user for name
-  // server.playSound("/sounds/high-score.wav");
-  writeHighScore(std::string{"abc"}, game.score);
+  server.highScore(game.score);
 }
 
 static int scoreIndex = 0;

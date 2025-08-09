@@ -22,25 +22,15 @@ int posToIndex(unsigned long xy) {
   return round(xy / PX_SIZE);
 }
 
-CRGB colorAt(int x, int y, CRGB leds[]) {
+CRGB colorAt(int x, int y, CRGB level[]) {
   if(x < 0 || y < 0 || x >= MAX_X || y >= MAX_Y) return HIDDEN_WALL_COLOR;
 
-  return leds[x * MAX_Y + y];
+  return level[x * MAX_Y + y];
 }
 
-const uint8_t SHIMMER_BRIGHTNESS_VARIATION = 30; // Max brightness variation (0-255)
-const uint8_t SHIMMER_HUE_VARIATION = 5;      // Max hue variation (0-255)
-const uint8_t SHIMMER_SATURATION_VARIATION = 20; // Max saturation variation (0-255)
-const uint16_t SHIMMER_SPEED = 20;             // Controls how fast the shimmer changes
 void setShimmerLed(unsigned long elapsed, int x, int y, CHSV hsv, CRGB leds[]) {
-  uint8_t brightnessOffset = sin8_C(elapsed / SHIMMER_SPEED + 0) * SHIMMER_BRIGHTNESS_VARIATION / 255;
-  uint8_t hueOffset = sin8_C(elapsed / (SHIMMER_SPEED * 1.5) + 100) * SHIMMER_HUE_VARIATION / 255;
-  uint8_t saturationOffset = sin8_C(elapsed / (SHIMMER_SPEED * 0.7) + 200) * SHIMMER_SATURATION_VARIATION / 255;
-
-  hsv.val = constrain(hsv.val + brightnessOffset - (SHIMMER_BRIGHTNESS_VARIATION / 2), 0, 255);
-  hsv.hue += hueOffset - (SHIMMER_HUE_VARIATION / 2);
-  hsv.sat = constrain(hsv.sat + saturationOffset - (SHIMMER_SATURATION_VARIATION / 2), 0, 255);
-
+  uint8_t shimmer_val = sin8(elapsed / 10 + x * 12 + y * 12);
+  hsv.val = map(shimmer_val, 0, 255, 60, 100);
   setLed(x, y, hsv2rgb_spectrum(hsv), leds);
 }
 

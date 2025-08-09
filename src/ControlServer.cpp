@@ -52,6 +52,10 @@ void ControlServer::stopSong() {
   // TODO
 }
 
+void ControlServer::highScore(int score) {
+  ws.printfAll("{\"type\":\"HIGH_SCORE\",\"score\":\"%d\"}", score);
+}
+
 void ControlServer::connect() {
   // Connect to Wi-Fi
   IPAddress local_IP(192, 168, 1, 184);
@@ -104,6 +108,12 @@ void ControlServer::connect() {
       double gamma = std::stod(msg.substr(pos + 1));
       game.updateAccel(beta, gamma);
       // Serial.printf("Client %" PRIu32 " data: %f, %f\n", client->id(), beta, gamma);
+    } else if(type == "highscore") {
+      int pos = msg.find(',');
+      std::string name = msg.substr(typePos + 1, pos);
+      long score = std::stol(msg.substr(pos + 1));
+      writeHighScore(name, score);
+      updateState(HIGH_SCORES);
     } else if(type == "gravity")
       game.GRAVITY = std::stod(msg.substr(typePos + 1));
     else if(type == "accel")
