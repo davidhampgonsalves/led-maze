@@ -23,7 +23,8 @@ Game::Game() {
   FRICTION = 0.006;
   ACCEL_DIVISOR = 160;
   TERM_VELOCITY = 50;
-  SLOW_FRICTION = 0.1;
+  SLOW_TERM_VELOCITY = 5;
+  SLOW_FRICTION = 0.02;
 }
 
 void Game::start(int lvl, bool isRestart) {
@@ -45,8 +46,6 @@ void Game::start(int lvl, bool isRestart) {
   velY = 0;
 
   if(isRestart) return;
-
-  return;
 
   switch (lvl) {
   case 1:
@@ -96,14 +95,11 @@ void Game::update(int interval) {
   velX += interval * accelX;
   velY += interval * accelY;
 
-  if (velX > TERM_VELOCITY)
-    velX = TERM_VELOCITY;
-  if (velX < -TERM_VELOCITY)
-    velX = -TERM_VELOCITY;
-  if (velY > TERM_VELOCITY)
-    velY = TERM_VELOCITY;
-  if (velY < -TERM_VELOCITY)
-    velY = -TERM_VELOCITY;
+  double termVel = TERM_VELOCITY;
+  if(level->at(x, y) == SLOW)
+    termVel = SLOW_TERM_VELOCITY;
+  velX = limitVelocity(velX, termVel);
+  velY = limitVelocity(velY, termVel);
 
   int prevX = x;
   int prevY = y;
@@ -112,10 +108,6 @@ void Game::update(int interval) {
 
   posX = posX + interval * velX;
   posY = posY + interval * velY;
-
-  // allow to go into negative for boundary colisions
-  // if(posX < 0) posX = 0;
-  // if(posY < 0) posY = 0;
 
   x = posToIndex(posX);
   y = posToIndex(posY);
@@ -129,7 +121,7 @@ void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
   int px = level->at(x, y);
   int prevPx = level->at(prevX, prevY);
 
-  Serial.printf("%d/%d-vs %d/%d\n", x, y, prevX, prevY);
+  // Serial.printf("%d/%d-vs %d/%d\n", x, y, prevX, prevY);
   switch (px) {
   case EMPTY:
     checkDiags(prevX, prevY, prevPosX, prevPosY);
@@ -259,20 +251,24 @@ void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
     velX = -BOUNCE * velX;
     x = prevX;
     posX = prevPosX;
-    if(abs(velX) > 10) impact = true;
+    if(abs(velX) > 10) {
+      impact = true;
+      server.playSound("sounds/bounce.wav");
+    } else if(abs(velX) > 3)
+      server.playSound("sounds/sm-bounce.wav");
   }
   if (level->at(prevX, y) == WALL) {
     velY = -BOUNCE * velY;
     y = prevY;
     posY = prevPosY;
-    if(abs(velY) > 10) impact = true;
+    if(abs(velY) > 10) {
+      impact = true;
+      server.playSound("sounds/bounce.wav");
+    } else if(abs(velY) > 3)
+      server.playSound("sounds/sm-bounce.wav");
   }
 
-  if (impact) {
-    server.playSound("sounds/bounce.wav");
-    if(level->isPx(x, y, BREAKABLE_WALL)) level->breakPx(x, y);
-  } else
-    server.playSound("sounds/sm-bounce.wav");
+  if (impact && level->isPx(x, y, BREAKABLE_WALL)) level->breakPx(x, y);
 }
 
 bool Game::warp(int prevX, int prevY) {

@@ -15,9 +15,11 @@ class Game{
     double FRICTION;
     double SLOW_FRICTION;
     double TERM_VELOCITY;
+    double SLOW_TERM_VELOCITY;
     int ACCEL_DIVISOR;
     Level *level;
     int x, y;
+    int posX, posY;
     long score;
   private:
     double applyFriction(unsigned long elapsed, double vel);
@@ -37,7 +39,6 @@ class Game{
     unsigned int lives;
     double accelX, accelY;
     double velX, velY;
-    int posX, posY;
     int lastX, lastY;
 };
 

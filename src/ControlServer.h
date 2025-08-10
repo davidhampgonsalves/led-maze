@@ -8,6 +8,7 @@ class ControlServer {
     void playSong(const char* path);
     void playSound(const char* path);
     void stopSong();
+    void welcome();
     void highScore(int score);
   private:
     char indexData[7000];

@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <html>
     <head>
       <meta charset="UTF-8">
       <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
         body {
           display: flex;
           justify-content: center;
@@ -13,7 +19,6 @@
           color: #00ff00;
           font-family: monospace;
           font-size: 13px;
-          /* text-shadow: 0 0 1px #99dd99; */
           margin: 2em 0.5em 0;
         }
 
@@ -24,17 +29,6 @@
         #content {
           white-space-collapse: preserve;
         }
-
-        /* body::after {
-          pointer-events: none;
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background: repeating-linear-gradient(0deg, rgba(0,0,0, 0.5), rgba(0, 0, 0, 0.5) 1px, transparent 0px, transparent 2px)
-        } */
 
         #tune, #console {
           display: none;
@@ -93,10 +87,6 @@
           text-transform: uppercase;
           padding: 3px;
         }
-
-        /* input[switch] { */
-          /* display: none; */
-        /* } */
 
         @keyframes blink-caret {
           from, to {
@@ -386,6 +376,8 @@ const HIGH_SCORE_CONTENT = `
           const { type, url, score } = JSON.parse(event.data);
           if(type == "PLAY_SONG")
             playSong(url);
+          else if(type == "STOP_SONG")
+            stopSong();
           else if(type == "PLAY_SOUND") {
             playSound(url);
             if(url.endsWith("bounce.wav")) vibrate();
@@ -393,6 +385,8 @@ const HIGH_SCORE_CONTENT = `
           } else if(type == "HIGH_SCORE") {
             highScore(score);
             playSound("sounds/high-score.wav");
+          } else if(type == "WELCOME") {
+            welcome();
           }
         }
 
@@ -559,7 +553,7 @@ const HIGH_SCORE_CONTENT = `
 
         preloadSounds();
         intro();
-        // initConsole();
+        initConsole();
       </script>
       <audio id="music" src="https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/sounds/count.wav"></audio>
     </body>

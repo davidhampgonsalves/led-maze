@@ -49,11 +49,15 @@ void ControlServer::playSound(const char* path) {
 }
 
 void ControlServer::stopSong() {
-  // TODO
+  ws.printfAll("{\"type\":\"STOP_SONG\"}");
 }
 
 void ControlServer::highScore(int score) {
   ws.printfAll("{\"type\":\"HIGH_SCORE\",\"score\":\"%d\"}", score);
+}
+
+void ControlServer::welcome() {
+  ws.printfAll("{\"type\":\"WELCOME\"}");
 }
 
 void ControlServer::connect() {

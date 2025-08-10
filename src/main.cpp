@@ -53,6 +53,7 @@ void setup(){
   Serial.print("Free heap: ");
   Serial.println(ESP.getFreeHeap());
 
+  server.welcome();
 }
 
 static uint32_t lastWS = 0;

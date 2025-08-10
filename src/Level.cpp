@@ -56,21 +56,25 @@ void Level::draw(unsigned long elapsed, CRGB leds[]) {
       if(px == EMPTY) continue;
 
       CRGB c = colorAt(x, y, level);
-      if(isHidden(c)) {
-        bool isClose = (x <= game.x + 1 && x >= game.x - 1 && y <= game.y + 1 && y >= game.y - 1);
-        if(!isClose) continue;
+      bool hidden = isHidden(c);
+      int distanceToPlayer = -1;
+      if(hidden) {
+        distanceToPlayer = distanceBetween(indexToPos(x), indexToPos(y), game.posX, game.posY);
+        if(distanceToPlayer > 2500) continue;
       }
 
       if(px == FIRE) {
         setFlameLed(x, y, leds);
-      } else if(px == PORTAL) {
+      } else if(px == PORTAL)
         setShimmerLed(elapsed, x, y, PORTAL_HSV, leds);
-      } else if(px == SLOW) {
+      else if(px == SLOW)
         setShimmerLed(elapsed, x, y, SLOW_HSV, leds);
-      } else if(c == H_WALL_RGB)
+      else if(c == H_WALL_RGB)
         setLed(x, y, HIDDEN_WALL_COLOR, leds);
       else
         setLed(x, y, c, leds);
+
+      if(hidden) dimDistanceLed(x, y, distanceToPlayer, leds);
     }
   }
 }
