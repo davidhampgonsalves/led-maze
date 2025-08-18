@@ -1,14 +1,12 @@
 ## To do
-* hidden squares
-* slow squares
-* score time bonus
-* score counting sound
+* adjust score time bonus lower
+* warp only works forwards
+* music in levels not working
+* breaks if you play for awhile
 
 *[x] high score saving
 * movable squares?
   * moving fire, bounces of walls?
-
-* controller website
 
 bmp files are 6x50 24 bit color.
 

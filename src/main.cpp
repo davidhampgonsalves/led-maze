@@ -97,7 +97,7 @@ void gameOver(unsigned long elapsed) {
   deadLevel->draw(elapsed, leds);
 }
 void gameOverInit() {
-  server.playSound("/sounds/game-over.wav");
+  server.playSound("music/game-over.wav");
 }
 
 void title(unsigned long elapsed) {
@@ -108,7 +108,7 @@ void title(unsigned long elapsed) {
     updateState(HIGH_SCORES);
 }
 
-void titleInit() { server.playSong("/music/title.wav"); }
+void titleInit() { server.playSong("music/title.wav"); }
 
 void highScore(unsigned long elapsed) {
     if(elapsed % (WORD_WAIT * 2) < WORD_WAIT)

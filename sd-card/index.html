@@ -485,7 +485,7 @@ const HIGH_SCORE_CONTENT = `
         }
 
         function highScore(score) {
-          vibrate();
+          multiVibrate(2);
           display(HIGH_SCORE_CONTENT, () => {
             document.querySelector("#submit").addEventListener("click", (e) => {
               vibrate();

@@ -22,5 +22,5 @@ const CRGB H_WALL_RGB = CRGB(1, 1, 1);
 const CRGB H_FINISH_RGB = CRGB(0, 1, 0);
 const CRGB H_PORTAL_RGB = CRGB(0, 0, 1);
 
-const CHSV SLOW_HSV = CHSV(110, 180, 160); // used by shimmer
+const CHSV SLOW_HSV = CHSV(110, 160, 160); // used by shimmer
 const CHSV PORTAL_HSV = CHSV(220, 160, 160); // used by shimmer

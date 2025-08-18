@@ -14,7 +14,6 @@ class Level {
     void load(const char *path);
     void update(int interval);
     void draw(unsigned long elapsed, CRGB leds[]);
-    Pt find(int x, int y, Px px);
     Px at(int x, int y);
     bool isPx(int x, int y, Px px);
     void breakPx(int x, int y);

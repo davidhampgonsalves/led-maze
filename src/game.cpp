@@ -15,6 +15,7 @@
 const int GAME_MAX_X = 6000;
 const int GAME_MAX_Y = 50000;
 const double BOUNCE = 0.6;
+const int LEVEL_TIME_BONUS = 10000;
 
 Game game; // global game
 
@@ -115,6 +116,86 @@ void Game::update(int interval) {
   checkCollisions(prevX, prevY, prevPosX, prevPosY);
 }
 
+void Game::draw(CRGB leds[]) {
+  State state = curState();
+  auto elapsed = millis() - getStateStart(); // get this fresh since update can cause state changes
+
+  switch (state) {
+  case(PLAYING_LEVEL_END):
+    return drawLevelEnd(elapsed, leds);
+  case(PLAYING_LOSE_LIFE):
+    return drawLoseLife(elapsed, leds);
+  }
+
+  level->draw(elapsed, leds);
+
+  setLed(x, y, BALL_COLOR, leds);
+
+  switch (state) {
+  case (PLAYING_LEVEL_START):
+    drawLevelStart(elapsed, leds);
+    break;
+  case (PLAYING_DEATH):
+    drawDeath(elapsed, leds);
+    break;
+  };
+}
+
+void Game::drawLevelStart(unsigned long elapsed, CRGB leds[]) {
+  server.playSound("sounds/spawn.wav");
+  animateRing(elapsed, START_BURST, PLAYING, false, x, y, leds);
+}
+
+void Game::drawDeath(unsigned long elapsed, CRGB leds[]) {
+  animateRing(elapsed, DEATH_BURST, PLAYING_LOSE_LIFE, true, x, y, leds);
+}
+
+void Game::drawLoseLife(unsigned long elapsed, CRGB leds[]) {
+  if (lives == 0)
+    return updateState(GAME_OVER);
+
+  if (elapsed < 700)
+    write(lives, leds);
+  else if (elapsed < 1500)
+    write(lives - 1, leds);
+  else {
+    lives -= 1;
+    updateState(PLAYING_LEVEL_START);
+    start(level->levelNum, true);
+  }
+}
+
+static long prevScore;
+void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
+  if (elapsed == 0) {
+    server.stopSong();
+    prevScore = score;
+    score += 100;
+    Serial.println("level timer:");
+    Serial.println(levelTimer);
+    // TODO: add time bonus (broken)
+    if (levelTimer < LEVEL_TIME_BONUS)
+      score += (LEVEL_TIME_BONUS - levelTimer) / 100;
+  }
+
+  if (elapsed < 4000) {
+    int countUp = prevScore;
+    if (elapsed > 700 && elapsed < 1700) {
+      countUp = ((static_cast<float>(elapsed - 700) / 1000.0) * (score - prevScore)) + prevScore;
+      server.playSound("sounds/count.wav");
+    }
+    if (elapsed >= 1700)
+      countUp = score;
+
+    writeFixed5(countUp, leds);
+  } else if (level->levelNum >= LEVEL_COUNT)
+    updateState(GAME_WIN);
+  else {
+    updateState(PLAYING_LEVEL_START);
+    start(level->levelNum + 1, false);
+  }
+}
+
 void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (x == prevX && y == prevY) return; // haven't entered new px
 
@@ -148,85 +229,6 @@ void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
   }
 }
 
-void Game::draw(CRGB leds[]) {
-  State state = curState();
-  auto elapsed = millis() - getStateStart(); // get this fresh since update can cause state changes
-
-  switch (state) {
-  case(PLAYING_LEVEL_END):
-    return levelEnd(elapsed, leds);
-  case(PLAYING_LOSE_LIFE):
-    return loseLife(elapsed, leds);
-  }
-
-  level->draw(elapsed, leds);
-
-  setLed(x, y, BALL_COLOR, leds);
-
-  switch (state) {
-  case (PLAYING_LEVEL_START):
-    levelStart(elapsed, leds);
-    break;
-  case (PLAYING_DEATH):
-    death(elapsed, leds);
-    break;
-  };
-}
-
-void Game::levelStart(unsigned long elapsed, CRGB leds[]) {
-  server.playSound("sounds/spawn.wav");
-  animateRing(elapsed, START_BURST, PLAYING, false, x, y, leds);
-}
-
-static long prevScore;
-void Game::levelEnd(unsigned long elapsed, CRGB leds[]) {
-  if (elapsed == 0) {
-    server.stopSong();
-    prevScore = score;
-    score += 100;
-    Serial.println(levelTimer);
-    // TODO: add time bonus (broken)
-    // long timeBonus = (10000 - levelTimer) / 100;
-    // if (timeBonus > 0)
-    //   score += timeBonus;
-  }
-
-  if (elapsed < 4000) {
-    int countUp = prevScore;
-    if (elapsed > 700 && elapsed < 1700) {
-      countUp = ((static_cast<float>(elapsed - 700) / 1000.0) * (score - prevScore)) + prevScore;
-      server.playSound("sounds/count.wav");
-    }
-    if (elapsed >= 1700)
-      countUp = score;
-
-    writeFixed5(countUp, leds);
-  } else if (level->levelNum >= LEVEL_COUNT)
-    updateState(GAME_WIN);
-  else {
-    updateState(PLAYING_LEVEL_START);
-    start(level->levelNum + 1, false);
-  }
-}
-
-void Game::death(unsigned long elapsed, CRGB leds[]) {
-  animateRing(elapsed, DEATH_BURST, PLAYING_LOSE_LIFE, true, x, y, leds);
-}
-
-void Game::loseLife(unsigned long elapsed, CRGB leds[]) {
-  if (lives == 0)
-    return updateState(GAME_OVER);
-
-  if (elapsed < 700)
-    write(lives, leds);
-  else if (elapsed < 1500)
-    write(lives - 1, leds);
-  else {
-    lives -= 1;
-    updateState(PLAYING_LEVEL_START);
-    start(level->levelNum, true);
-  }
-}
 
 void Game::checkDiags(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (x == prevX || y == prevY) return;
@@ -271,15 +273,31 @@ void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (impact && level->isPx(x, y, BREAKABLE_WALL)) level->breakPx(x, y);
 }
 
+// warps only look in y axis for a single sibling warp
 bool Game::warp(int prevX, int prevY) {
-  Pt target = level->find(x, y, PORTAL);
+  int warpY = -1;
+  Serial.println("Warp called");
+  for(int tmpY = 0 ; tmpY < MAX_Y && warpY < 0 ; tmpY++) {
+    if(tmpY == y) continue;
+    if(level->at(x, tmpY) == PORTAL) warpY = tmpY;
+  }
 
-  int offsetX = x > prevX ? 501 : -501;
-  int offsetY = y > prevY ? 501 : -501;
+  Serial.println("Warp found");
+  Serial.println(warpY);
+  if(warpY < 0) return false;
 
-  unsigned long tmpXPos = indexToPos(target.x) + offsetX;
-  unsigned long tmpYPos = indexToPos(target.y) + offsetY;
+  int offsetX = x > prevX ? 500 : -500;
+  int offsetY = y > prevY ? 500 : -500;
 
+  unsigned long tmpXPos = posX + offsetX;
+  unsigned long tmpYPos = indexToPos(warpY) + offsetY;
+
+  Serial.println("Warping to");
+  Serial.print(x);
+  Serial.print("/");
+  Serial.println(warpY);
+  Serial.print(tmpXPos);
+  Serial.println(tmpYPos);
   if (level->at(posToIndex(tmpXPos), posToIndex(tmpYPos)) == EMPTY) {
     updatePos(tmpXPos, tmpYPos);
     server.playSound("sounds/portal.wav");

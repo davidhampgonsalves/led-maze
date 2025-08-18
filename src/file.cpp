@@ -32,7 +32,6 @@ std::vector<HighScore> readHighScores() {
   return highScores;
 }
 
-// THis is shorter if it works
 void readFile(const char* path, char* out) {
   File file = SD.open(path);
   int i=0;
@@ -43,24 +42,11 @@ void readFile(const char* path, char* out) {
   file.close();
 }
 
-// void readFile(const char* path, unsigned char* buff) {
-//   File file = SD.open(path);
-//   Serial.println("File size");
-//   Serial.println(file.size());
-//   delay(100);
-//   for(int i=0 ; file.available() ; i++){
-//     buff[i] = file.read();
-//   }
-//   file.close();
-// }
-
 bool isHighScore(long score) {
   auto scores = readHighScores();
+  Serial.println("highscore?");
+  Serial.println(scores.back().score < score);
   return scores.back().score < score;
-}
-void writeFile(const char * path, std::string message){
-  Serial.printf("Writing file: %s\n", path);
-
 }
 
 void writeHighScore(std::string name, long score) {

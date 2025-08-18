@@ -25,15 +25,16 @@ class Game{
     double applyFriction(unsigned long elapsed, double vel);
     void checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY);
     void checkDiags(int prevX, int prevY, int prevPosX, int prevPosY);
-    void levelStart(unsigned long elapsed, CRGB leds[]);
-    void levelEnd(unsigned long elapsed, CRGB leds[]);
-    void death(unsigned long elapsed, CRGB leds[]);
-    void loseLife(unsigned long elapsed, CRGB leds[]);
     bool warp(int prevX, int prevY);
     void wall(int prevX, int prevY, int prevPosX, int prevPosY);
+
+    void drawLevelStart(unsigned long elapsed, CRGB leds[]);
+    void drawLevelEnd(unsigned long elapsed, CRGB leds[]);
+    void drawDeath(unsigned long elapsed, CRGB leds[]);
+    void drawLoseLife(unsigned long elapsed, CRGB leds[]);
+
     void updatePos(unsigned long newXPos, unsigned long newYPos);
     int speed();
-    bool shouldGlance(int prevX, int prevY, bool isOverCenterX, bool isOverCenterY);
 
     unsigned long levelTimer;
     unsigned int lives;

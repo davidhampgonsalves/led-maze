@@ -115,15 +115,3 @@ bool Level::isPx(int x, int y, Px px) {
 void Level::breakPx(int x, int y) {
   level[x * MAX_Y + y] = BLACK;
 }
-
-Pt Level::find(int x, int y, Px px) {
-  for (int fY = 0; fY < MAX_Y; fY++) {
-    for (int fX = 0 ; fX < MAX_X; fX++) {
-      if(x == fX && y == fY) continue;
-
-      if(at(fX, fY) == px)
-        return Pt{fX, fY};
-    }
-  }
-  return Pt{ -1, -1 };
-}
