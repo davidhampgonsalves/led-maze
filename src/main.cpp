@@ -17,7 +17,8 @@ std::vector<HighScore> scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
 Level *winLevel = NULL;
-State prevState = GAME_OVER;
+
+// State prevState = GAME_OVER;
 
 void setup(){
   Serial.begin(115200);
@@ -157,7 +158,7 @@ void loop() {
 
   State state = curState();
 
-  if(state != prevState)
+  if(state != prevState())
     switch(state) {
       case TITLE:
         titleInit();
@@ -173,7 +174,6 @@ void loop() {
         break;
     }
 
-  prevState = state;
   switch(state) {
     case START_UP:
       updateState(TITLE);
@@ -209,7 +209,8 @@ void loop() {
       Serial.println("ERROR: game state not handled.");
   }
 
-  // TODO: display frame time every 5 seconds
+  updatePrevState(state);
+
   FastLED.show();
   prev = now;
 }

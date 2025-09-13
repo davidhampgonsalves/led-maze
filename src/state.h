@@ -17,5 +17,7 @@ enum State {
 };
 
 void updateState(State s);
+void updatePrevState(State s);
 unsigned long getStateStart();
 State curState();
+State prevState();

@@ -51,6 +51,29 @@
           left: 0;
         }
 
+        input[type="range"] {
+          -webkit-appearance: none;
+          appearance: none; /* Standard property */
+          background: transparent;
+          cursor: pointer;
+          margin: 5px;
+          width: 178px;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+          background: none; /* Example background color */
+          height: 8px; /* Example height */
+          border-radius: 4px; /* Example border-radius */
+        }
+        input[type="range"]::-webkit-slider-thumb {
+          background: #00ff00;
+          -webkit-appearance: none; /* Reset default thumb appearance */
+          appearance: none;
+          height: 28px; /* Example thumb size */
+          width: 16px;
+          margin-top: -4px; /* Adjust to center vertically on the track */
+      }
+
         .cursor {
           display: inline-block;
           animation: blink-caret 1s step-end infinite;
@@ -162,6 +185,13 @@
              ║               ║
              ╚═══════════════╝
 </span>
+<span id=settings>
+             ╔═══════════════╗
+             ║               ║
+             ║    CONFIG     ║
+             ║               ║
+             ╚═══════════════╝
+</span>
 
                                           `;
 
@@ -197,6 +227,38 @@ Can you escape the dungeon fast enough to be imortalized in the hall of fame or 
 </span>
                                           `;
 
+      const SETTINGS_CONTENT = `
+
+
+           ▒▒▒▒▒▒╗ ▒▒▒▒▒▒╗ ▒▒▒╗   ▒▒╗▒▒▒▒▒▒▒╗
+          ▒▒╔════╝▒▒╔═══▒▒╗▒▒▒▒╗  ▒▒║▒▒╔════╝
+          ▒▒║     ▒▒║   ▒▒║▒▒╔▒▒╗ ▒▒║▒▒▒▒▒╗
+          ▒▒║     ▒▒║   ▒▒║▒▒║╚▒▒╗▒▒║▒▒╔══╝
+          ╚▒▒▒▒▒▒╗╚▒▒▒▒▒▒╔╝▒▒║ ╚▒▒▒▒║▒▒║
+          ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝
+
+
+
+
+                 ** BRIGHTNESS **
+             ╔════════════════════════╗
+             ║<input type="range" id="brightness" />║
+             ║                        ║
+             ╚════════════════════════╝
+</span>
+
+
+
+
+
+<span id=back>
+             ╔═══════════════╗
+             ║               ║
+             ║    ← BACK     ║
+             ║               ║
+             ╚═══════════════╝
+</span>
+                                          `;
 
 const PLAY_CONTENT = `
 
@@ -419,7 +481,7 @@ const HIGH_SCORE_CONTENT = `
           }
 
           const now = Date.now();
-          if (now - lastSendTime >= 100) {
+          if (now - lastSendTime >= 250) {
             lastSendTime = now;
             // console.log("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
             websocket.send("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
@@ -469,6 +531,7 @@ const HIGH_SCORE_CONTENT = `
           display(WELCOME_CONTENT, () => {
             document.querySelector("#start").addEventListener("click", start);
             document.querySelector("#about").addEventListener("click", about);
+            document.querySelector("#settings").addEventListener("click", settings);
           });
         }
 
@@ -476,6 +539,16 @@ const HIGH_SCORE_CONTENT = `
           vibrate();
           display(ABOUT_CONTENT, () => {
             document.querySelector("#back").addEventListener("click", welcome);
+          });
+        }
+
+        function settings() {
+          vibrate();
+          display(SETTINGS_CONTENT, () => {
+            document.querySelector("#back").addEventListener("click", welcome);
+            document.querySelector("#brightness").addEventListener("input", (event) => {
+              console.log(event.target.value);
+            });
           });
         }
 
@@ -511,17 +584,43 @@ const HIGH_SCORE_CONTENT = `
           });
         }
 
+        // let song = null;
+        // function playSong(url, doNotRestart=false) {
+        //   if(song) song.pause();
+
+        //   url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/" + url;
+        //   if(doNotRestart && song?.currentSrc == url) {
+        //     console.log("not playing because its the same some as the currentSrc");
+        //     return;
+        //   }
+
+        //   song = new Audio();
+        //   song.addEventListener("canplaythrough", (event) => {
+        //     console.log("canplaythrough - play", url);
+        //     song.play();
+        //   });
+        //   song.addEventListener('error', function failed(e) {
+        //     console.log("COULD NOT LOAD AUDIO", e);
+        //   });
+        //   song.currentTime = 0;
+        //   song.src = url;
+        //   song.loop = true;
+        //   song.load();
+        // }
+
         let song = null;
         function playSong(url, doNotRestart=false) {
           url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/" + url;
-          if(doNotRestart && song?.currentSrc == url) return;
-          song = new Audio(url);
-          if(song) song.pause();
+          if(doNotRestart && song?.buffer == soundBuffers[url]) return;
+          if(song) song.disconnect();
+
+          song = audioContext.createBufferSource();
+          song.buffer = soundBuffers[url];
+          song.connect(audioContext.destination);
           song.loop = true;
-          song.addEventListener("canplaythrough", (event) => {
-            song.play();
-          });
+          song.start(0);
         }
+
 
         function playSound(url) {
           const source = audioContext.createBufferSource();
@@ -535,10 +634,17 @@ const HIGH_SCORE_CONTENT = `
           };
         }
 
+        const MUSIC_PATHS = ["choir", "sparky", "spooky", "title"]
         const SOUND_PATHS = ["sm-bounce", "bounce", "death", "portal", "slow", "count", "get-ready", "win", "spawn"];
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const soundBuffers = {};
         function preloadSounds() {
+          MUSIC_PATHS.forEach(async path => {
+            const url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/music/" + path + ".wav";
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            soundBuffers[url] = await audioContext.decodeAudioData(arrayBuffer);
+          })
           SOUND_PATHS.forEach(async path => {
             const url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/sounds/" + path + ".wav";
             const response = await fetch(url);
@@ -548,7 +654,8 @@ const HIGH_SCORE_CONTENT = `
         }
 
         function stopSong() {
-          if(song) song.pause();
+          // if(song) song.pause();
+          if(song) song.disconnect();
          }
 
         preloadSounds();

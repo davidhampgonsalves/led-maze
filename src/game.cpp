@@ -15,7 +15,9 @@
 const int GAME_MAX_X = 6000;
 const int GAME_MAX_Y = 50000;
 const double BOUNCE = 0.6;
-const int LEVEL_TIME_BONUS = 10000;
+const int LEVEL_TIME_BONUS = 15000;
+
+static long prevScore;
 
 Game game; // global game
 
@@ -28,6 +30,12 @@ Game::Game() {
   SLOW_FRICTION = 0.02;
 }
 
+const char* SONGS[] = {
+  "music/sparky.wav",
+  "music/spooky.wav",
+  "music/choir.wav",
+};
+const uint SONG_COUNT = 3;
 void Game::start(int lvl, bool isRestart) {
   level = new Level(lvl);
   accelX, accelY = 0;
@@ -48,19 +56,7 @@ void Game::start(int lvl, bool isRestart) {
 
   if(isRestart) return;
 
-  switch (lvl) {
-  case 1:
-    server.playSong("music/sparky.wav");
-    break;
-  case 2:
-    server.playSong("music/spooky.wav");
-    break;
-  case 3:
-    server.playSong("music/choir.wav");
-    break;
-  default:
-    server.playSong("music/choir.wav");
-  }
+  server.playSong(SONGS[lvl % SONG_COUNT]);
 }
 
 void Game::updateAccel(double beta, double gamma) {
@@ -120,6 +116,14 @@ void Game::draw(CRGB leds[]) {
   State state = curState();
   auto elapsed = millis() - getStateStart(); // get this fresh since update can cause state changes
 
+  if(state != prevState()) {
+    switch (state) {
+    case(PLAYING_LEVEL_START):
+      return drawLevelStartInit(elapsed, leds);
+    case(PLAYING_LEVEL_END):
+      return drawLevelEndInit(elapsed, leds);
+    }
+  }
   switch (state) {
   case(PLAYING_LEVEL_END):
     return drawLevelEnd(elapsed, leds);
@@ -141,8 +145,11 @@ void Game::draw(CRGB leds[]) {
   };
 }
 
-void Game::drawLevelStart(unsigned long elapsed, CRGB leds[]) {
+void Game::drawLevelStartInit(unsigned long elapsed, CRGB leds[]) {
   server.playSound("sounds/spawn.wav");
+}
+
+void Game::drawLevelStart(unsigned long elapsed, CRGB leds[]) {
   animateRing(elapsed, START_BURST, PLAYING, false, x, y, leds);
 }
 
@@ -165,19 +172,15 @@ void Game::drawLoseLife(unsigned long elapsed, CRGB leds[]) {
   }
 }
 
-static long prevScore;
-void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
-  if (elapsed == 0) {
-    server.stopSong();
-    prevScore = score;
-    score += 100;
-    Serial.println("level timer:");
-    Serial.println(levelTimer);
-    // TODO: add time bonus (broken)
-    if (levelTimer < LEVEL_TIME_BONUS)
-      score += (LEVEL_TIME_BONUS - levelTimer) / 100;
-  }
+void Game::drawLevelEndInit(unsigned long elapsed, CRGB leds[]) {
+  server.stopSong();
+  prevScore = score;
+  score += 100;
+  if (levelTimer < LEVEL_TIME_BONUS)
+    score += (LEVEL_TIME_BONUS - levelTimer) / 100;
+}
 
+void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
   if (elapsed < 4000) {
     int countUp = prevScore;
     if (elapsed > 700 && elapsed < 1700) {
@@ -276,28 +279,25 @@ void Game::wall(int prevX, int prevY, int prevPosX, int prevPosY) {
 // warps only look in y axis for a single sibling warp
 bool Game::warp(int prevX, int prevY) {
   int warpY = -1;
-  Serial.println("Warp called");
   for(int tmpY = 0 ; tmpY < MAX_Y && warpY < 0 ; tmpY++) {
     if(tmpY == y) continue;
     if(level->at(x, tmpY) == PORTAL) warpY = tmpY;
   }
 
-  Serial.println("Warp found");
-  Serial.println(warpY);
   if(warpY < 0) return false;
 
-  int offsetX = x > prevX ? 500 : -500;
-  int offsetY = y > prevY ? 500 : -500;
+  unsigned long tmpXPos = posX;
+  if(x > prevX)
+    tmpXPos += PX_SIZE;
+  if(x < prevX)
+    tmpXPos -= PX_SIZE;
 
-  unsigned long tmpXPos = posX + offsetX;
-  unsigned long tmpYPos = indexToPos(warpY) + offsetY;
+  unsigned long tmpYPos = posY + ((warpY - y) * PX_SIZE);
+  if(y > prevY)
+    tmpYPos += PX_SIZE;
+  if(y < prevY)
+    tmpYPos -= PX_SIZE;
 
-  Serial.println("Warping to");
-  Serial.print(x);
-  Serial.print("/");
-  Serial.println(warpY);
-  Serial.print(tmpXPos);
-  Serial.println(tmpYPos);
   if (level->at(posToIndex(tmpXPos), posToIndex(tmpYPos)) == EMPTY) {
     updatePos(tmpXPos, tmpYPos);
     server.playSound("sounds/portal.wav");

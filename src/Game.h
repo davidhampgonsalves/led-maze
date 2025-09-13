@@ -29,7 +29,9 @@ class Game{
     void wall(int prevX, int prevY, int prevPosX, int prevPosY);
 
     void drawLevelStart(unsigned long elapsed, CRGB leds[]);
+    void drawLevelStartInit(unsigned long elapsed, CRGB leds[]);
     void drawLevelEnd(unsigned long elapsed, CRGB leds[]);
+    void drawLevelEndInit(unsigned long elapsed, CRGB leds[]);
     void drawDeath(unsigned long elapsed, CRGB leds[]);
     void drawLoseLife(unsigned long elapsed, CRGB leds[]);
 
