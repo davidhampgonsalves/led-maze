@@ -34,8 +34,11 @@ const char* SONGS[] = {
   "music/sparky.wav",
   "music/spooky.wav",
   "music/choir.wav",
+  "music/middling-carabana.wav",
+  "music/shannon.wav",
+  "music/dark-and-light.wav",
 };
-const uint SONG_COUNT = 3;
+const uint SONG_COUNT = 6;
 void Game::start(int lvl, bool isRestart) {
   level = new Level(lvl);
   accelX, accelY = 0;

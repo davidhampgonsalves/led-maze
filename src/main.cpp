@@ -6,6 +6,7 @@
 #include "Game.h"
 #include "text.h"
 #include "state.h"
+#include "settings.h"
 #include "file.h"
 
 #define NUM_LEDS 300
@@ -31,7 +32,7 @@ void setup(){
   Serial.println("Server is connected.");
 
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);  // GRB ordering is assumed
-  FastLED.setBrightness(30);
+  Settings::brightness = 30;
   FastLED.setTemperature(0xFF7029);
 
   FastLED.clear();
@@ -146,6 +147,8 @@ void highScores(unsigned long elapsed) {
 }
 
 void loop() {
+  FastLED.setBrightness(Settings::brightness);
+
   unsigned long now = millis();
   uint interval = now - prev;
   auto elapsed = now - getStateStart();

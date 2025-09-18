@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include "ControlServer.h"
+#include "settings.h"
 #include "state.h"
 #include "Game.h"
 #include "file.h"
@@ -118,7 +119,9 @@ void ControlServer::connect() {
       long score = std::stol(msg.substr(pos + 1));
       writeHighScore(name, score);
       updateState(HIGH_SCORES);
-    } else if(type == "gravity")
+    } else if(type == "brightness")
+      Settings::brightness = std::stod(msg.substr(typePos + 1));
+    else if(type == "gravity")
       game.GRAVITY = std::stod(msg.substr(typePos + 1));
     else if(type == "accel")
       game.ACCEL_DIVISOR = std::stoi(msg.substr(typePos + 1));

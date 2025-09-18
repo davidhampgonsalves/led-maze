@@ -452,13 +452,18 @@ const HIGH_SCORE_CONTENT = `
           }
         }
 
-        function log(...args) {
-          const consoleEl = document.querySelector("#console");
-          const el = document.createElement('div');
-          el.innerText = args.join(", ");
-          consoleEl.prepend(el);
-        }
         function initConsole() {
+          const cLog = console.log;
+
+          function log(...args) {
+            const consoleEl = document.querySelector("#console");
+            const el = document.createElement('div');
+            el.innerText = args.join(", ");
+            consoleEl.prepend(el);
+
+            cLog(...args);
+          }
+
           console.log = log;
           console.error = log;
 
@@ -547,7 +552,8 @@ const HIGH_SCORE_CONTENT = `
           display(SETTINGS_CONTENT, () => {
             document.querySelector("#back").addEventListener("click", welcome);
             document.querySelector("#brightness").addEventListener("input", (event) => {
-              console.log(event.target.value);
+              const brightness =  event.target.value;
+              websocket.send(`brightness:${brightness}`);
             });
           });
         }
@@ -634,7 +640,7 @@ const HIGH_SCORE_CONTENT = `
           };
         }
 
-        const MUSIC_PATHS = ["choir", "sparky", "spooky", "title"]
+        const MUSIC_PATHS = ["choir", "sparky", "spooky", "title", "middling-carabana", "dark-and-light", "shannon"];
         const SOUND_PATHS = ["sm-bounce", "bounce", "death", "portal", "slow", "count", "get-ready", "win", "spawn"];
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const soundBuffers = {};
