@@ -16,6 +16,7 @@ const int GAME_MAX_X = 6000;
 const int GAME_MAX_Y = 50000;
 const double BOUNCE = 0.6;
 const int LEVEL_TIME_BONUS = 15000;
+const uint MAX_LIVES = 1;
 
 static long prevScore;
 
@@ -45,7 +46,7 @@ void Game::start(int lvl, bool isRestart) {
 
   if (lvl == 1 && !isRestart) {
     score = 0;
-    lives = 3;
+    lives = MAX_LIVES;
   }
   levelTimer = 0;
 

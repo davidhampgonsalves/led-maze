@@ -5,7 +5,7 @@
 
 enum Px { EMPTY, WALL, BREAKABLE_WALL, FIRE, SLOW, FINISH, START, PORTAL, H_WALL, H_FIRE, H_FINISH, H_PORTAL };
 
-const uint8_t LEVEL_COUNT = 19;
+const uint8_t LEVEL_COUNT = 10;
 
 class Level {
   public:

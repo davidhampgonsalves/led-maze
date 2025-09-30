@@ -140,6 +140,9 @@
       </div>
 
       <script>
+        const MUSIC_PATHS = ["title", "choir", "sparky", "spooky", "middling-carabana", "dark-and-light", "shannon", "fancy"];
+        const SOUND_PATHS = ["sm-bounce", "bounce", "death", "portal", "slow", "count", "get-ready", "spawn", "game-end", "game-over"];
+
         const INTRO_CONTENT = `
      ███╗   ███╗ █████╗ ███████╗███████╗
      ████╗ ████║██╔══██╗╚══███╔╝██╔════╝
@@ -230,21 +233,21 @@ Can you escape the dungeon fast enough to be imortalized in the hall of fame or 
       const SETTINGS_CONTENT = `
 
 
-           ▒▒▒▒▒▒╗ ▒▒▒▒▒▒╗ ▒▒▒╗   ▒▒╗▒▒▒▒▒▒▒╗
-          ▒▒╔════╝▒▒╔═══▒▒╗▒▒▒▒╗  ▒▒║▒▒╔════╝
-          ▒▒║     ▒▒║   ▒▒║▒▒╔▒▒╗ ▒▒║▒▒▒▒▒╗
-          ▒▒║     ▒▒║   ▒▒║▒▒║╚▒▒╗▒▒║▒▒╔══╝
-          ╚▒▒▒▒▒▒╗╚▒▒▒▒▒▒╔╝▒▒║ ╚▒▒▒▒║▒▒║
-          ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝
+       ▒▒▒▒▒▒╗ ▒▒▒▒▒▒╗ ▒▒▒╗   ▒▒╗▒▒▒▒▒▒▒╗
+      ▒▒╔════╝▒▒╔═══▒▒╗▒▒▒▒╗  ▒▒║▒▒╔════╝
+      ▒▒║     ▒▒║   ▒▒║▒▒╔▒▒╗ ▒▒║▒▒▒▒▒╗
+      ▒▒║     ▒▒║   ▒▒║▒▒║╚▒▒╗▒▒║▒▒╔══╝
+      ╚▒▒▒▒▒▒╗╚▒▒▒▒▒▒╔╝▒▒║ ╚▒▒▒▒║▒▒║
+      ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝
 
 
 
 
-                 ** BRIGHTNESS **
-             ╔════════════════════════╗
-             ║<input type="range" id="brightness" />║
-             ║                        ║
-             ╚════════════════════════╝
+              ** BRIGHTNESS **
+          ╔════════════════════════╗
+          ║<input type="range" id="brightness" value=30 />║
+          ║                        ║
+          ╚════════════════════════╝
 </span>
 
 
@@ -252,11 +255,11 @@ Can you escape the dungeon fast enough to be imortalized in the hall of fame or 
 
 
 <span id=back>
-             ╔═══════════════╗
-             ║               ║
-             ║    ← BACK     ║
-             ║               ║
-             ╚═══════════════╝
+              ╔═══════════════╗
+              ║               ║
+              ║    ← BACK     ║
+              ║               ║
+              ╚═══════════════╝
 </span>
                                           `;
 
@@ -323,13 +326,53 @@ const HIGH_SCORE_CONTENT = `
 
 
                                           `;
+
+const DEATH_CONTENT = `
+
+
+
+
+            ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+         ▒▒▒▒▒▒          ▒▒▒▒▒▒
+       ▒▒▒▒                  ▒▒▒▒
+     ▒▒▒▒                      ▒▒▒▒
+    ▒▒▒                          ▒▒▒
+   ▒▒▒                            ▒▒▒
+  ▒▒▒       ▒▒▒▒        ▒▒▒▒       ▒▒▒
+ ▒▒▒       ▒▒▒▒▒▒      ▒▒▒▒▒▒▒      ▒▒▒
+ ▒▒      ▒▒▒▒▒▒▒▒▒     ▒▒▒▒▒▒▒▒      ▒▒
+▒▒▒      ▒▒▒▒▒▒▒▒      ▒▒▒▒▒▒▒▒      ▒▒▒
+▒▒▒        ▒▒▒▒▒        ▒▒▒▒▒        ▒▒▒
+ ▒▒                ▒▒                ▒▒
+ ▒▒▒              ▒▒▒▒              ▒▒▒
+  ▒▒▒                              ▒▒▒
+   ▒▒▒▒                          ▒▒▒
+     ▒▒▒▒▒                    ▒▒▒▒▒
+        ▒▒      ▒      ▒      ▒▒
+        ▒▒      ▒      ▒      ▒▒
+        ▒▒▒▒    ▒▒    ▒▒    ▒▒▒▒
+          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+
+
+
+                                          `;
+const WIN_CONTENT = `
+
+
+
+
+                TODO: WIN ANIMATION
+
+
+
+                                          `;
       </script>
 
       <script>
         /**
          * ios-haptics v0.1.0
          * tijn.dev
-         * @license MIT
+         * ▒license MIT
          */
         function haptic() {
           try {
@@ -361,7 +404,9 @@ const HIGH_SCORE_CONTENT = `
 
         const FRAME_RATE = 100;
         let displayCount = 0;
-        function display(content, initFn, options={}) {
+        let currentPage = null;
+        function display(page, content, initFn, options={}) {
+          currentPage = page;
           displayCount++;
           const displayId = displayCount;
 
@@ -447,7 +492,7 @@ const HIGH_SCORE_CONTENT = `
           } else if(type == "HIGH_SCORE") {
             highScore(score);
             playSound("sounds/high-score.wav");
-          } else if(type == "WELCOME") {
+          } else if(type == "WELCOME" && currentPage != "WELCOME") {
             welcome();
           }
         }
@@ -478,7 +523,8 @@ const HIGH_SCORE_CONTENT = `
         }
 
         let lastSendTime = 0;
-        function handleOrientationEvent(event, posEl) {
+        let posEl = null;
+        function handleOrientationEvent(event) {
           const { beta, gamma } = event;
           if(beta == null) {
             console.log("beta not set");
@@ -488,11 +534,10 @@ const HIGH_SCORE_CONTENT = `
           const now = Date.now();
           if (now - lastSendTime >= 250) {
             lastSendTime = now;
-            // console.log("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
+            console.log("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
             websocket.send("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
 
-            console.log(beta, gamma);
-            const posEl = document.querySelector("#play span");
+            if(!posEl) posEl = document.querySelector("#play span");
             posEl.style.top = 140 + (beta / 90 * 95) + "px";
             posEl.style.left = 180 + (gamma / 90 * 115) + "px";
           }
@@ -504,12 +549,7 @@ const HIGH_SCORE_CONTENT = `
           await requestWakeLock();
           play();
 
-          const posEl = document.querySelector("#play span");
-          window.addEventListener('deviceorientation', (e) => handleOrientationEvent(e, posEl));
-
-          initWebSocket();
-
-          // document.querySelector("#debug").style.visibility = 'visible'
+          window.addEventListener('deviceorientation', handleOrientationEvent);
         }
 
         function handleSettingChange() {
@@ -533,7 +573,7 @@ const HIGH_SCORE_CONTENT = `
           vibrate();
           document.querySelector("body").removeEventListener("click", welcome);
           playSong("music/title.wav", true);
-          display(WELCOME_CONTENT, () => {
+          display("WELCOME", WELCOME_CONTENT, () => {
             document.querySelector("#start").addEventListener("click", start);
             document.querySelector("#about").addEventListener("click", about);
             document.querySelector("#settings").addEventListener("click", settings);
@@ -542,17 +582,18 @@ const HIGH_SCORE_CONTENT = `
 
         function about() {
           vibrate();
-          display(ABOUT_CONTENT, () => {
+          display("ABOUT", ABOUT_CONTENT, () => {
             document.querySelector("#back").addEventListener("click", welcome);
           });
         }
 
         function settings() {
           vibrate();
-          display(SETTINGS_CONTENT, () => {
+          display("SETTINGS", SETTINGS_CONTENT, () => {
             document.querySelector("#back").addEventListener("click", welcome);
             document.querySelector("#brightness").addEventListener("input", (event) => {
               const brightness =  event.target.value;
+              console.log("sending brightness " + brightness);
               websocket.send(`brightness:${brightness}`);
             });
           });
@@ -560,12 +601,27 @@ const HIGH_SCORE_CONTENT = `
 
         function intro() {
           document.querySelector("body").addEventListener("click", welcome);
-          display(INTRO_CONTENT, () => {}, { flicker: true, frameDelay: 8 });
+          display("INTRO", INTRO_CONTENT, () => {}, { flicker: true, frameDelay: 8 });
+        }
+
+        function death() {
+          window.removeEventListener('deviceorientation', handleOrientationEvent);
+
+          display("DEATH", DEATH_CONTENT, () => {}, { flicker: true, frameDelay: 8 });
+
+          window.setTimeout(welcome, 3000);
+        }
+
+        function win() {
+          window.removeEventListener('deviceorientation', handleOrientationEvent);
+          display("WIN", WIN_CONTENT, () => {}, { flicker: true, frameDelay: 8 });
+
+          window.setTimeout(welcome, 3000);
         }
 
         function highScore(score) {
           multiVibrate(2);
-          display(HIGH_SCORE_CONTENT, () => {
+          display("HIGH_SCORE", HIGH_SCORE_CONTENT, () => {
             document.querySelector("#submit").addEventListener("click", (e) => {
               vibrate();
               const inputEl = document.querySelector("input");
@@ -585,34 +641,11 @@ const HIGH_SCORE_CONTENT = `
           vibrate();
           stopSong();
           playSound("sounds/get-ready.wav");
-          display(PLAY_CONTENT, () => {
+          websocket.send("start:1");
+          display("PLAY", PLAY_CONTENT, () => {
             vibrate();
           });
         }
-
-        // let song = null;
-        // function playSong(url, doNotRestart=false) {
-        //   if(song) song.pause();
-
-        //   url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/" + url;
-        //   if(doNotRestart && song?.currentSrc == url) {
-        //     console.log("not playing because its the same some as the currentSrc");
-        //     return;
-        //   }
-
-        //   song = new Audio();
-        //   song.addEventListener("canplaythrough", (event) => {
-        //     console.log("canplaythrough - play", url);
-        //     song.play();
-        //   });
-        //   song.addEventListener('error', function failed(e) {
-        //     console.log("COULD NOT LOAD AUDIO", e);
-        //   });
-        //   song.currentTime = 0;
-        //   song.src = url;
-        //   song.loop = true;
-        //   song.load();
-        // }
 
         let song = null;
         function playSong(url, doNotRestart=false) {
@@ -640,8 +673,6 @@ const HIGH_SCORE_CONTENT = `
           };
         }
 
-        const MUSIC_PATHS = ["choir", "sparky", "spooky", "title", "middling-carabana", "dark-and-light", "shannon"];
-        const SOUND_PATHS = ["sm-bounce", "bounce", "death", "portal", "slow", "count", "get-ready", "win", "spawn"];
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const soundBuffers = {};
         function preloadSounds() {
@@ -664,7 +695,9 @@ const HIGH_SCORE_CONTENT = `
           if(song) song.disconnect();
          }
 
+
         preloadSounds();
+        initWebSocket();
         intro();
         initConsole();
       </script>

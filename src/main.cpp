@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <FastLED.h>
-#include <vector>
+
+#include "FS.h"
+#include "SD.h"
 
 #include "ControlServer.h"
 #include "Game.h"
@@ -14,12 +16,12 @@
 #define RELAY_PIN 27
 CRGB leds[NUM_LEDS];
 
-std::vector<HighScore> scores;
+ScoreList scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
 Level *winLevel = NULL;
 
-// State prevState = GAME_OVER;
+uint8_t settingsBrightness;
 
 void setup(){
   Serial.begin(115200);
@@ -31,15 +33,32 @@ void setup(){
   server.connect();
   Serial.println("Server is connected.");
 
+  settingsBrightness = 30;
+
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);  // GRB ordering is assumed
-  Settings::brightness = 30;
   FastLED.setTemperature(0xFF7029);
 
   FastLED.clear();
   FastLED.show();
 
+  SD.begin(10);
+  File file = SD.open("/high-scores.txt", FILE_WRITE);
+  file.println("aaa:1");
+  file.println("bbb:2");
+  file.println("ccc:3");
+  file.close();
+
+  readHighScores();
+
+  writeHighScore("bbb", 100);
+  writeHighScore("EEK", 1212);
+  writeHighScore("ccc", 50);
+  // writeHighScore("Mee", 560);
+  // writeHighScore("Loo", 750);
+  // Serial.printf("is 200 a high score? %d\n", isHighScore(200));
+  // Serial.printf("is 40 a high score? %d\n", isHighScore(40));
+
   scores = readHighScores();
-  Serial.println("High score read complete.");
 
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
@@ -62,6 +81,10 @@ static uint32_t lastWS = 0;
 static uint32_t deltaWS = 2000;
 static unsigned long prev;
 
+void gameStartInit() {
+  server.stopSong();
+}
+
 void gameStart(unsigned long elapsed) {
   if(elapsed < WORD_WAIT) write("get", leds);
   else if(elapsed < WORD_WAIT * 2) write("ready", leds);
@@ -71,17 +94,17 @@ void gameStart(unsigned long elapsed) {
   }
 }
 
-void gameStartInit() {
-  server.stopSong();
+void gameEndInit() {
+  server.playSound("music/game-end.wav");
+  server.win();
 }
 
 void gameEnd(unsigned long elapsed) {
-  if(elapsed > 1500) {
+  if(elapsed > 5000) {
     if(isHighScore(game.score))
       updateState(HIGH_SCORE);
     else
       updateState(TITLE);
-    return;
   }
 
   winLevel->update(0);
@@ -92,14 +115,17 @@ void gameOver(unsigned long elapsed) {
   if(elapsed > 5000) {
     if(isHighScore(game.score))
       updateState(HIGH_SCORE);
-    return updateState(TITLE);
+    else
+      updateState(TITLE);
   }
 
   deadLevel->update(0);
   deadLevel->draw(elapsed, leds);
 }
+
 void gameOverInit() {
   server.playSound("music/game-over.wav");
+  server.death();
 }
 
 void title(unsigned long elapsed) {
@@ -110,7 +136,10 @@ void title(unsigned long elapsed) {
     updateState(HIGH_SCORES);
 }
 
-void titleInit() { server.playSong("music/title.wav"); }
+void titleInit() {
+  server.playSong("music/title.wav");
+  server.welcome();
+}
 
 void highScore(unsigned long elapsed) {
     if(elapsed % (WORD_WAIT * 2) < WORD_WAIT)
@@ -138,16 +167,16 @@ void highScores(unsigned long elapsed) {
   }
 
   elapsed -= WORD_WAIT * 3 + (scoreIndex * WORD_WAIT_LONG * 2);
-  if(elapsed < WORD_WAIT_LONG) write(scores[scoreIndex].name, leds);
-  else if(elapsed < WORD_WAIT_LONG * 2) write(scores[scoreIndex].score, leds);
+  if(elapsed < WORD_WAIT_LONG) write(scores.scores[scoreIndex].name, leds);
+  else if(elapsed < WORD_WAIT_LONG * 2) write(scores.scores[scoreIndex].score, leds);
   else {
     scoreIndex += 1;
-    if(scoreIndex >= scores.size()) updateState(TITLE);
+    if(scoreIndex >= MAX_HIGHSCORES) updateState(TITLE);
   }
 }
 
 void loop() {
-  FastLED.setBrightness(Settings::brightness);
+  FastLED.setBrightness(settingsBrightness);
 
   unsigned long now = millis();
   uint interval = now - prev;
@@ -171,6 +200,9 @@ void loop() {
         break;
       case GAME_START:
         gameStartInit();
+        break;
+      case GAME_WIN:
+        gameEndInit();
         break;
       case GAME_OVER:
         gameOverInit();

@@ -1,19 +1,20 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
-const int HIGH_SCORE_COUNT = 5;
+const int MAX_HIGHSCORES = 3;
+const int NAME_MAX_LEN = 4;
 
 struct HighScore {
-  std::string name;
-  long score;
+    char name[NAME_MAX_LEN];
+    long score;
 };
 
-void writeHighScore(std::string name, long score);
-std::vector<HighScore> readHighScores();
-// std::string readFile(const char* path);
-void readFile(const char* path, char*);
-// void readWav(const char* path, unsigned char*);
+struct ScoreList {
+    HighScore scores[MAX_HIGHSCORES];
+};
+
 bool isHighScore(long score);
+ScoreList readHighScores();
+void writeHighScore(char* name, long score);
+
+void readFile(const char* path, char*);
 void initSd();

@@ -2,34 +2,79 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
-#include <vector>
 
 #include "file.h"
 
 const char* HIGH_SCORE_PATH = "/high-scores.txt";
-std::vector<HighScore> readHighScores() {
-  File file = SD.open(HIGH_SCORE_PATH);
-  std::vector<HighScore> highScores;
-  if(!file){
-    Serial.println("Failed to open file for reading");
-  }
+int MAX_CHARS_PER_LINE = 20;
 
-  std::string name = "";
-  std::string score = "";
-  bool isName = true;
-  while(file.available()){
-    char c = static_cast<char>(file.read());
-    if(c == ',') isName = false;
-    else if(c == '\n') {
-      highScores.push_back({ name, std::stol(score) });
-      name = "", score = "";
-      isName = true;
-    } else if(isName) name += c;
-    else score += c;
-  }
-  file.close();
+void sortScores(ScoreList& list) {
+    for (int i = 0; i < MAX_HIGHSCORES - 1; i++) {
+        for (int j = 0; j < MAX_HIGHSCORES - i - 1; j++) {
+            if (list.scores[j].score < list.scores[j + 1].score) {
+                HighScore temp = list.scores[j];
+                list.scores[j] = list.scores[j + 1];
+                list.scores[j + 1] = temp;
+            }
+        }
+    }
+}
 
-  return highScores;
+
+ScoreList readHighScores() {
+    ScoreList list;
+    int scoreCount = 0;
+
+    File file = SD.open(HIGH_SCORE_PATH);
+    char lineBuffer[MAX_CHARS_PER_LINE];
+    Serial.println("Read scores");
+    while (file.available() && scoreCount < MAX_HIGHSCORES) {
+        int bytesRead = file.readBytesUntil('\n', lineBuffer, MAX_CHARS_PER_LINE - 1);
+        lineBuffer[bytesRead] = '\0';
+
+        char* name_token = strtok(lineBuffer, ":");
+        char* score_token = strtok(NULL, ":");
+
+        strncpy(list.scores[scoreCount].name, name_token, NAME_MAX_LEN - 1);
+        list.scores[scoreCount].name[NAME_MAX_LEN - 1] = '\0';
+        list.scores[scoreCount].score = atol(score_token);
+
+        Serial.printf("  %d %s %ld\n", scoreCount, list.scores[scoreCount].name, list.scores[scoreCount].score);
+
+        scoreCount++;
+    }
+    file.close();
+
+    return list;
+}
+
+bool isHighScore(long score) {
+  return score > readHighScores().scores[MAX_HIGHSCORES - 1].score;
+}
+
+void writeHighScore(char* name, long score) {
+    ScoreList list = readHighScores();
+
+    long lowestScore = list.scores[MAX_HIGHSCORES - 1].score;
+
+    strncpy(list.scores[MAX_HIGHSCORES - 1].name, name, NAME_MAX_LEN - 1);
+    list.scores[MAX_HIGHSCORES - 1].name[NAME_MAX_LEN - 1] = '\0';
+    for (int j = 0; list.scores[MAX_HIGHSCORES - 1].name[j] != '\0'; j++) {
+      list.scores[MAX_HIGHSCORES - 1].name[j] = tolower(list.scores[MAX_HIGHSCORES - 1].name[j]);
+    }
+    list.scores[MAX_HIGHSCORES - 1].score = score;
+
+    sortScores(list);
+
+    File file = SD.open(HIGH_SCORE_PATH, FILE_WRITE);
+    if (file) {
+        for (int i = 0; i < MAX_HIGHSCORES; i++) {
+            file.print(list.scores[i].name);
+            file.print(':');
+            file.println(list.scores[i].score);
+        }
+        file.close();
+    }
 }
 
 void readFile(const char* path, char* out) {
@@ -39,37 +84,6 @@ void readFile(const char* path, char* out) {
     out[i] = file.read();
   }
   out[i] = '\0';
-  file.close();
-}
-
-bool isHighScore(long score) {
-  auto scores = readHighScores();
-  Serial.println("highscore?");
-  Serial.println(scores.back().score < score);
-  return scores.back().score < score;
-}
-
-void writeHighScore(std::string name, long score) {
-  auto scores = readHighScores();
-  int index = -1;
-  for(int i=0 ; i < scores.size() ; i++)
-    if(scores[i].score < score) index = i;
-
-  scores.insert(scores.begin() + index, HighScore{ name, score });
-
-  if(scores.size() > 3) scores.pop_back();
-
-  File file = SD.open(HIGH_SCORE_PATH, FILE_WRITE);
-  if(!file) {
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-
-  char line [100];
-  for(int i=0 ; i < scores.size() ; i++) {
-    sprintf (line, "%s,%d", scores[i].name, scores[i].score);
-    file.println(line);
-  }
   file.close();
 }
 

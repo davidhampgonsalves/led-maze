@@ -23,6 +23,8 @@ static AsyncWebServer webServer(80);
 static AsyncWebSocketMessageHandler wsHandler;
 static AsyncWebSocket ws("/ws", wsHandler.eventHandler());
 
+static char msgBuff[128];
+
 void ControlServer::cleanupWsClients() {
   // TODO: call this at most once per second
   ws.cleanupClients();
@@ -61,6 +63,14 @@ void ControlServer::welcome() {
   ws.printfAll("{\"type\":\"WELCOME\"}");
 }
 
+void ControlServer::death() {
+  ws.printfAll("{\"type\":\"DEATH\"}");
+}
+
+void ControlServer::win() {
+  ws.printfAll("{\"type\":\"WIN\"}");
+}
+
 void ControlServer::connect() {
   // Connect to Wi-Fi
   IPAddress local_IP(192, 168, 1, 184);
@@ -87,8 +97,6 @@ void ControlServer::connect() {
 
   wsHandler.onConnect([](AsyncWebSocket *server, AsyncWebSocketClient *client) {
     Serial.printf("Client %" PRIu32 " connected\n", client->id());
-
-    updateState(GAME_START);
   });
 
   wsHandler.onDisconnect([](AsyncWebSocket *server, uint32_t clientId) {
@@ -103,32 +111,34 @@ void ControlServer::connect() {
   });
 
   wsHandler.onMessage([](AsyncWebSocket *server, AsyncWebSocketClient *client, const uint8_t *data, size_t len) {
-    std::string msg((const char *)data);
-    int typePos = msg.find(':');
-    std::string type = msg.substr(0, typePos);
+    strcpy(msgBuff, (const char *)data);
 
-    if(type == "pos") {
-      int pos = msg.find(',');
-      double beta = std::stod(msg.substr(typePos + 1, pos));
-      double gamma = std::stod(msg.substr(pos + 1));
+    char* type = strtok(msgBuff, ":");
+    Serial.printf("type: %s\n", type);
+
+    // std::string msg((const char *)data);
+    // int typePos = msg.find(':');
+    // std::string type = msg.substr(0, typePos);
+
+
+    if(strcmp(type, "start") == 0) {
+      updateState(GAME_START);
+    } else if(strcmp(type, "pos") == 0) {
+      double beta = std::stod(strtok(NULL, ","));
+      double gamma = std::stod(strtok(NULL, ","));
+
+      Serial.printf("data: %s %f, %f\n", type, beta, gamma);
       game.updateAccel(beta, gamma);
-      // Serial.printf("Client %" PRIu32 " data: %f, %f\n", client->id(), beta, gamma);
-    } else if(type == "highscore") {
-      int pos = msg.find(',');
-      std::string name = msg.substr(typePos + 1, pos);
-      long score = std::stol(msg.substr(pos + 1));
+    } else if(strcmp(type, "highscore") == 0) {
+      long score = std::stol(strtok(NULL, ","));
+      char* name = strtok(NULL, ",");
+
+      Serial.printf("%s %ld\n", name, score);
       writeHighScore(name, score);
       updateState(HIGH_SCORES);
-    } else if(type == "brightness")
-      Settings::brightness = std::stod(msg.substr(typePos + 1));
-    else if(type == "gravity")
-      game.GRAVITY = std::stod(msg.substr(typePos + 1));
-    else if(type == "accel")
-      game.ACCEL_DIVISOR = std::stoi(msg.substr(typePos + 1));
-    else if(type == "friction") {
-      game.FRICTION = std::stod(msg.substr(typePos + 1));
-      Serial.printf("friction: %f", game.FRICTION);
-    } else
+    } else if(strcmp(type, "brightness") == 0)
+      settingsBrightness = std::stod(strtok(NULL, ","));
+    else
       Serial.printf("ERROR: %s msg type not handled.\n");
   });
 

@@ -1,3 +1,3 @@
-namespace Settings {
-  uint8_t brightness;
-}
+#pragma once
+
+extern uint8_t settingsBrightness;
