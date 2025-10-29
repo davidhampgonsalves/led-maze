@@ -41,24 +41,22 @@ void setup(){
   FastLED.clear();
   FastLED.show();
 
-  SD.begin(10);
-  File file = SD.open("/high-scores.txt", FILE_WRITE);
-  file.println("aaa:1");
-  file.println("bbb:2");
-  file.println("ccc:3");
-  file.close();
+  // SD.begin(10);
+  // File file = SD.open("/high-scores.txt", FILE_WRITE);
+  // file.println("aaa:1");
+  // file.println("bbb:2");
+  // file.println("ccc:3");
+  // file.close();
 
-  readHighScores();
+  // readHighScores();
 
-  writeHighScore("bbb", 100);
-  writeHighScore("EEK", 1212);
-  writeHighScore("ccc", 50);
+  // writeHighScore("bbb", 100);
+  // writeHighScore("eek", 1212);
+  // writeHighScore("ccc", 50);
   // writeHighScore("Mee", 560);
   // writeHighScore("Loo", 750);
   // Serial.printf("is 200 a high score? %d\n", isHighScore(200));
   // Serial.printf("is 40 a high score? %d\n", isHighScore(40));
-
-  scores = readHighScores();
 
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
@@ -95,7 +93,8 @@ void gameStart(unsigned long elapsed) {
 }
 
 void gameEndInit() {
-  server.playSound("music/game-end.wav");
+  server.stopSong();
+  server.playSound("sounds/game-end.wav");
   server.win();
 }
 
@@ -124,7 +123,8 @@ void gameOver(unsigned long elapsed) {
 }
 
 void gameOverInit() {
-  server.playSound("music/game-over.wav");
+  server.stopSong();
+  server.playSound("sounds/game-over.wav");
   server.death();
 }
 
@@ -150,6 +150,10 @@ void highScore(unsigned long elapsed) {
 
 void highScoreInit() {
   server.highScore(game.score);
+}
+
+void highScoresInit() {
+  scores = readHighScores();
 }
 
 static int scoreIndex = 0;
@@ -198,6 +202,9 @@ void loop() {
       case HIGH_SCORE:
         highScoreInit();
         break;
+      case HIGH_SCORES:
+        highScoresInit();
+        break;
       case GAME_START:
         gameStartInit();
         break;
@@ -244,6 +251,7 @@ void loop() {
       Serial.println("ERROR: game state not handled.");
   }
 
+  Serial.println("updating prev state to state");
   updatePrevState(state);
 
   FastLED.show();

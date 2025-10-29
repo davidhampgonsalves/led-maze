@@ -34,12 +34,14 @@ Game::Game() {
 const char* SONGS[] = {
   "music/sparky.wav",
   "music/spooky.wav",
+  "music/slow.wav",
   "music/choir.wav",
+  "music/fancy.wav",
   "music/middling-carabana.wav",
   "music/shannon.wav",
   "music/dark-and-light.wav",
 };
-const uint SONG_COUNT = 6;
+const uint SONG_COUNT = 7;
 void Game::start(int lvl, bool isRestart) {
   level = new Level(lvl);
   accelX, accelY = 0;
@@ -123,11 +125,14 @@ void Game::draw(CRGB leds[]) {
   if(state != prevState()) {
     switch (state) {
     case(PLAYING_LEVEL_START):
-      return drawLevelStartInit(elapsed, leds);
+      drawLevelStartInit();
+      break;
     case(PLAYING_LEVEL_END):
-      return drawLevelEndInit(elapsed, leds);
+      drawLevelEndInit();
+      break;
     }
   }
+
   switch (state) {
   case(PLAYING_LEVEL_END):
     return drawLevelEnd(elapsed, leds);
@@ -149,7 +154,7 @@ void Game::draw(CRGB leds[]) {
   };
 }
 
-void Game::drawLevelStartInit(unsigned long elapsed, CRGB leds[]) {
+void Game::drawLevelStartInit() {
   server.playSound("sounds/spawn.wav");
 }
 
@@ -176,25 +181,27 @@ void Game::drawLoseLife(unsigned long elapsed, CRGB leds[]) {
   }
 }
 
-void Game::drawLevelEndInit(unsigned long elapsed, CRGB leds[]) {
+void Game::drawLevelEndInit() {
+  Serial.println("LEVEL END");
+  Serial.println(prevScore);
   server.stopSong();
   prevScore = score;
   score += 100;
+  Serial.println(prevScore);
   if (levelTimer < LEVEL_TIME_BONUS)
     score += (LEVEL_TIME_BONUS - levelTimer) / 100;
 }
 
 void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
   if (elapsed < 4000) {
-    int countUp = prevScore;
-    if (elapsed > 700 && elapsed < 1700) {
-      countUp = ((static_cast<float>(elapsed - 700) / 1000.0) * (score - prevScore)) + prevScore;
+    if(elapsed < 700)
+      writeFixed5(prevScore, leds);
+    else if (elapsed < 1700) {
+      long countUp = ((static_cast<float>(elapsed - 700) / 1000.0) * (score - prevScore)) + prevScore;
       server.playSound("sounds/count.wav");
-    }
-    if (elapsed >= 1700)
-      countUp = score;
-
-    writeFixed5(countUp, leds);
+      writeFixed5(countUp, leds);
+    } else
+      writeFixed5(score, leds);
   } else if (level->levelNum >= LEVEL_COUNT)
     updateState(GAME_WIN);
   else {

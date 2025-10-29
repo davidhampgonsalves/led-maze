@@ -1,10 +1,15 @@
 ## To do
 
-* breaks if you play for awhile
-* high score saving
+* breaks if you play for awhile?
 
-* spawn is too fast
-* spooky has dead space at end
+* spawn is kind of agressive
+* sometimes you can go through a square without triggering it?
+* final levels
+* more songs
+* does win work?
+* does game over song play?
+
+* level end init gets called twice and causes the score count bug
 
 # Levels
 bmp files are 6x50 24 bit color.
@@ -18,5 +23,5 @@ __Web UI title font is ANSII SHADOW__
 Tap top left of webpage
 
 
-# Decalc Coffee Recipe
+# Decalf Coffee Recipe
 `18.5 in, 45 out, over 20-23s`

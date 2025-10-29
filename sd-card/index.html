@@ -95,7 +95,7 @@
         #play span {
           position: absolute;
           top: 140px;
-          left: 180px;
+          left: 210px;
           font-size: 1.2em;
         }
 
@@ -140,7 +140,7 @@
       </div>
 
       <script>
-        const MUSIC_PATHS = ["title", "choir", "sparky", "spooky", "middling-carabana", "dark-and-light", "shannon", "fancy"];
+        const MUSIC_PATHS = ["title", "choir", "sparky", "spooky", "slow", "middling-carabana", "dark-and-light", "shannon", "fancy"];
         const SOUND_PATHS = ["sm-bounce", "bounce", "death", "portal", "slow", "count", "get-ready", "spawn", "game-end", "game-over"];
 
         const INTRO_CONTENT = `
@@ -539,7 +539,7 @@ const WIN_CONTENT = `
 
             if(!posEl) posEl = document.querySelector("#play span");
             posEl.style.top = 140 + (beta / 90 * 95) + "px";
-            posEl.style.left = 180 + (gamma / 90 * 115) + "px";
+            posEl.style.left = 210 + (gamma / 90 * 115) + "px";
           }
         }
 
@@ -637,6 +637,10 @@ const WIN_CONTENT = `
           });
         }
 
+        function clamp(value, min, max) {
+          return Math.max(min, Math.min(value, max));
+        }
+
         function play() {
           vibrate();
           stopSong();
@@ -644,6 +648,16 @@ const WIN_CONTENT = `
           websocket.send("start:1");
           display("PLAY", PLAY_CONTENT, () => {
             vibrate();
+            document.querySelector("body").addEventListener('mousemove', (e) => {
+              const box = document.querySelector("#play").getBoundingClientRect();
+              const centerX = (box.left + box.right) / 2;
+              const centerY = (box.top + box.bottom) / 2;
+
+              let gamma = clamp(e.pageX - centerX, -90, 90) / 4;
+              let beta = clamp(e.pageY - centerY, -90, 90) / 4;
+
+              handleOrientationEvent({ beta, gamma })
+            });
           });
         }
 
@@ -691,10 +705,8 @@ const WIN_CONTENT = `
         }
 
         function stopSong() {
-          // if(song) song.pause();
           if(song) song.disconnect();
-         }
-
+        }
 
         preloadSounds();
         initWebSocket();

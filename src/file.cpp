@@ -55,20 +55,17 @@ bool isHighScore(long score) {
 void writeHighScore(char* name, long score) {
     ScoreList list = readHighScores();
 
-    long lowestScore = list.scores[MAX_HIGHSCORES - 1].score;
-
     strncpy(list.scores[MAX_HIGHSCORES - 1].name, name, NAME_MAX_LEN - 1);
     list.scores[MAX_HIGHSCORES - 1].name[NAME_MAX_LEN - 1] = '\0';
-    for (int j = 0; list.scores[MAX_HIGHSCORES - 1].name[j] != '\0'; j++) {
-      list.scores[MAX_HIGHSCORES - 1].name[j] = tolower(list.scores[MAX_HIGHSCORES - 1].name[j]);
-    }
     list.scores[MAX_HIGHSCORES - 1].score = score;
 
+    Serial.printf("added high score %s %ld\n", list.scores[MAX_HIGHSCORES - 1].name, list.scores[MAX_HIGHSCORES - 1].score);
     sortScores(list);
 
     File file = SD.open(HIGH_SCORE_PATH, FILE_WRITE);
     if (file) {
         for (int i = 0; i < MAX_HIGHSCORES; i++) {
+            Serial.printf("writing high score: %s %ld\n", list.scores[i].name, list.scores[i].score);
             file.print(list.scores[i].name);
             file.print(':');
             file.println(list.scores[i].score);

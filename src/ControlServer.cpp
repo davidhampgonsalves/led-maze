@@ -133,7 +133,8 @@ void ControlServer::connect() {
       long score = std::stol(strtok(NULL, ","));
       char* name = strtok(NULL, ",");
 
-      Serial.printf("%s %ld\n", name, score);
+      for (int j = 0; name[j] != '\0'; j++) { name[j] = tolower(name[j]); }
+
       writeHighScore(name, score);
       updateState(HIGH_SCORES);
     } else if(strcmp(type, "brightness") == 0)
