@@ -210,7 +210,7 @@ void loop() {
 
   State state = curState();
 
-  if(state != RACING_ANIMATION) FastLED.clear();
+  if(state != RACING_ANIMATION && state != RAINBOW_ANIMATION) FastLED.clear();
 
   if(isFreshState())
     switch(state)   {
@@ -234,6 +234,9 @@ void loop() {
         break;
       case RACING_ANIMATION:
         racingAnimationInit(leds);
+        break;
+      case RAINBOW_ANIMATION:
+        rainbowAnimationInit();
         break;
     }
 
@@ -269,6 +272,9 @@ void loop() {
       break;
     case RACING_ANIMATION:
       racingAnimation(elapsed, leds);
+      break;
+    case RAINBOW_ANIMATION:
+      rainbowAnimation(elapsed, leds);
       break;
     default:
       Serial.println("ERROR: game state not handled.");

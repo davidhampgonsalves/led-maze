@@ -15,6 +15,7 @@ enum State {
   HIGH_SCORES,
   DEMO,
   RACING_ANIMATION,
+  RAINBOW_ANIMATION,
 };
 
 void setNextState(State s);

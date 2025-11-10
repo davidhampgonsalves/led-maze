@@ -189,7 +189,7 @@ void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
     } else
       writeFixed5(score, leds);
   } else if (level->levelNum >= LEVEL_COUNT)
-    setNextState(GAME_WIN);
+    setNextState(RAINBOW_ANIMATION);
   else {
     setNextState(PLAYING_LEVEL_START);
     start(level->levelNum + 1, false);
