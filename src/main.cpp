@@ -1,19 +1,29 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
+#include "esp_sleep.h"
+#include "driver/rtc_io.h"
 #include "FS.h"
 #include "SD.h"
 
 #include "ControlServer.h"
 #include "Game.h"
 #include "text.h"
+#include "colors.h"
 #include "state.h"
+#include "animations.h"
 #include "settings.h"
 #include "file.h"
+
+#define DEBUG false
+
+#define BUTTON_PIN_BITMASK(GPIO) (1ULL << GPIO)
+#define WAKEUP_GPIO              GPIO_NUM_33
 
 #define NUM_LEDS 300
 #define DATA_PIN 25
 #define RELAY_PIN 27
+#define uS_TO_S_FACTOR 1000000ULL
 CRGB leds[NUM_LEDS];
 
 ScoreList scores;
@@ -73,6 +83,12 @@ void setup(){
   Serial.println(ESP.getFreeHeap());
 
   server.welcome();
+
+  esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK(WAKEUP_GPIO), ESP_EXT1_WAKEUP_ANY_HIGH);
+  rtc_gpio_pulldown_en(WAKEUP_GPIO);
+  rtc_gpio_pullup_dis(WAKEUP_GPIO);
+
+  trackLastInput();
 }
 
 static uint32_t lastWS = 0;
@@ -88,7 +104,7 @@ void gameStart(unsigned long elapsed) {
   else if(elapsed < WORD_WAIT * 2) write("ready", leds);
   else {
     game.start(1, false);
-    updateState(PLAYING_LEVEL_START);
+    setNextState(PLAYING_LEVEL_START);
   }
 }
 
@@ -101,9 +117,9 @@ void gameEndInit() {
 void gameEnd(unsigned long elapsed) {
   if(elapsed > 5000) {
     if(isHighScore(game.score))
-      updateState(HIGH_SCORE);
+      setNextState(HIGH_SCORE);
     else
-      updateState(TITLE);
+      setNextState(TITLE);
   }
 
   winLevel->update(0);
@@ -113,9 +129,9 @@ void gameEnd(unsigned long elapsed) {
 void gameOver(unsigned long elapsed) {
   if(elapsed > 5000) {
     if(isHighScore(game.score))
-      updateState(HIGH_SCORE);
+      setNextState(HIGH_SCORE);
     else
-      updateState(TITLE);
+      setNextState(TITLE);
   }
 
   deadLevel->update(0);
@@ -133,13 +149,14 @@ void title(unsigned long elapsed) {
     titleLevel->update(0);
     titleLevel->draw(elapsed, leds);
   } else
-    updateState(HIGH_SCORES);
+    setNextState(RACING_ANIMATION);
 }
 
 void titleInit() {
   server.playSong("music/title.wav");
   server.welcome();
 }
+
 
 void highScore(unsigned long elapsed) {
     if(elapsed % (WORD_WAIT * 2) < WORD_WAIT)
@@ -175,7 +192,7 @@ void highScores(unsigned long elapsed) {
   else if(elapsed < WORD_WAIT_LONG * 2) write(scores.scores[scoreIndex].score, leds);
   else {
     scoreIndex += 1;
-    if(scoreIndex >= MAX_HIGHSCORES) updateState(TITLE);
+    if(scoreIndex >= MAX_HIGHSCORES) setNextState(TITLE);
   }
 }
 
@@ -185,7 +202,6 @@ void loop() {
   unsigned long now = millis();
   uint interval = now - prev;
   auto elapsed = now - getStateStart();
-  FastLED.clear();
 
   if (now - lastWS >= deltaWS) {
     server.cleanupWsClients();
@@ -194,8 +210,10 @@ void loop() {
 
   State state = curState();
 
-  if(state != prevState())
-    switch(state) {
+  if(state != RACING_ANIMATION) FastLED.clear();
+
+  if(isFreshState())
+    switch(state)   {
       case TITLE:
         titleInit();
         break;
@@ -214,12 +232,14 @@ void loop() {
       case GAME_OVER:
         gameOverInit();
         break;
+      case RACING_ANIMATION:
+        racingAnimationInit(leds);
+        break;
     }
 
   switch(state) {
     case START_UP:
-      updateState(TITLE);
-      state = curState();
+      setNextState(TITLE);
       break;
     case TITLE:
       title(elapsed);
@@ -245,15 +265,24 @@ void loop() {
     case PLAYING_LEVEL_END:
     case PLAYING_LOSE_LIFE:
       game.update(interval);
-      game.draw(leds);
+      game.draw(leds, state, elapsed);
+      break;
+    case RACING_ANIMATION:
+      racingAnimation(elapsed, leds);
       break;
     default:
       Serial.println("ERROR: game state not handled.");
   }
 
-  Serial.println("updating prev state to state");
-  updatePrevState(state);
+  transitionState();
 
   FastLED.show();
   prev = now;
+
+  if((getLastInputTime() + 300000) < millis()) {
+    Serial.flush();
+    esp_sleep_enable_timer_wakeup(300 * uS_TO_S_FACTOR);
+    esp_deep_sleep_start();
+  }
+  //Serial.printf("%lu - %lu\n", (getLastInputTime() + 30000000), millis());
 }

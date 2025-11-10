@@ -12,6 +12,7 @@ CRGB* getLed(int x, int y, CRGB leds[]) {
   return &leds[x * MAX_Y + y];
 }
 
+
 void setLed(int x, int y, CRGB c, CRGB leds[]) {
   CRGB *px = getLed(x, y, leds);
   if(px == NULL) return;
@@ -20,6 +21,22 @@ void setLed(int x, int y, CRGB c, CRGB leds[]) {
 
 int indexToPos(int xy) {
   return (xy * PX_SIZE) + PX_CENTER; // return center
+}
+
+void setLedIfBlank(int x, int y, CRGB c, CRGB leds[]) {
+  CRGB* cAt = getLed(x, y, leds);
+
+  if(cAt == NULL) return;
+  if(*cAt != BLACK) return;
+
+  setLed(x, y, c, leds);
+}
+
+// ONLY FOR LEVELS
+CRGB colorAt(int x, int y, CRGB level[]) {
+  if(x < 0 || y < 0 || x >= MAX_X || y >= MAX_Y) return HIDDEN_WALL_COLOR;
+
+  return level[x * MAX_Y + y];
 }
 
 int posToIndex(unsigned long xy) {
@@ -32,11 +49,6 @@ int distanceBetween(int x1, int y1, int x2, int y2) {
     return abs(std::sqrt((dx * dx) + (dy * dy)));
 }
 
-CRGB colorAt(int x, int y, CRGB level[]) {
-  if(x < 0 || y < 0 || x >= MAX_X || y >= MAX_Y) return HIDDEN_WALL_COLOR;
-
-  return level[x * MAX_Y + y];
-}
 
 void setShimmerLed(unsigned long elapsed, int x, int y, CHSV hsv, CRGB leds[]) {
   const uint8_t min_brightness = hsv.v > 70 ? hsv.v - 70 : 0;
@@ -70,7 +82,7 @@ void dimDistanceLed(int x, int y, int distance, CRGB leds[]) {
 void animateRing(unsigned long elapsed, CRGB c, State next, bool outward, int x, int y, CRGB leds[]) {
   setLed(x, y, BLACK, leds);
 
-  if(elapsed > 1200) return updateState(next);
+  if(elapsed > 1200) return setNextState(next);
 
   if(outward)
     elapsed = 1200 - elapsed;

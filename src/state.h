@@ -14,10 +14,14 @@ enum State {
   HIGH_SCORE,
   HIGH_SCORES,
   DEMO,
+  RACING_ANIMATION,
 };
 
-void updateState(State s);
-void updatePrevState(State s);
+void setNextState(State s);
+void transitionState();
 unsigned long getStateStart();
+bool isFreshState();
 State curState();
-State prevState();
+
+void trackLastInput();
+unsigned long getLastInputTime();

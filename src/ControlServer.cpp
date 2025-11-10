@@ -93,17 +93,19 @@ void ControlServer::connect() {
       return;
     }
     request->send(SD, "/index.html", "text/html; charset=utf-8");
+    trackLastInput();
   });
 
   wsHandler.onConnect([](AsyncWebSocket *server, AsyncWebSocketClient *client) {
     Serial.printf("Client %" PRIu32 " connected\n", client->id());
+    trackLastInput();
   });
 
   wsHandler.onDisconnect([](AsyncWebSocket *server, uint32_t clientId) {
     Serial.printf("Client %" PRIu32 " disconnected\n", clientId);
     server->textAll("Client " + String(clientId) + " disconnected");
 
-    updateState(TITLE);
+    setNextState(TITLE);
   });
 
   wsHandler.onError([](AsyncWebSocket *server, AsyncWebSocketClient *client, uint16_t errorCode, const char *reason, size_t len) {
@@ -114,7 +116,7 @@ void ControlServer::connect() {
     strcpy(msgBuff, (const char *)data);
 
     char* type = strtok(msgBuff, ":");
-    Serial.printf("type: %s\n", type);
+    // Serial.printf("type: %s\n", type);
 
     // std::string msg((const char *)data);
     // int typePos = msg.find(':');
@@ -122,12 +124,12 @@ void ControlServer::connect() {
 
 
     if(strcmp(type, "start") == 0) {
-      updateState(GAME_START);
+      setNextState(GAME_START);
     } else if(strcmp(type, "pos") == 0) {
       double beta = std::stod(strtok(NULL, ","));
       double gamma = std::stod(strtok(NULL, ","));
 
-      Serial.printf("data: %s %f, %f\n", type, beta, gamma);
+      // Serial.printf("data: %s %f, %f\n", type, beta, gamma);
       game.updateAccel(beta, gamma);
     } else if(strcmp(type, "highscore") == 0) {
       long score = std::stol(strtok(NULL, ","));
@@ -136,11 +138,13 @@ void ControlServer::connect() {
       for (int j = 0; name[j] != '\0'; j++) { name[j] = tolower(name[j]); }
 
       writeHighScore(name, score);
-      updateState(HIGH_SCORES);
+      setNextState(HIGH_SCORES);
     } else if(strcmp(type, "brightness") == 0)
       settingsBrightness = std::stod(strtok(NULL, ","));
     else
       Serial.printf("ERROR: %s msg type not handled.\n");
+
+    trackLastInput();
   });
 
   wsHandler.onFragment([](AsyncWebSocket *server, AsyncWebSocketClient *client, const AwsFrameInfo *frameInfo, const uint8_t *data, size_t len) {

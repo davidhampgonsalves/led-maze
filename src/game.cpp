@@ -118,20 +118,9 @@ void Game::update(int interval) {
   checkCollisions(prevX, prevY, prevPosX, prevPosY);
 }
 
-void Game::draw(CRGB leds[]) {
-  State state = curState();
-  auto elapsed = millis() - getStateStart(); // get this fresh since update can cause state changes
-
-  if(state != prevState()) {
-    switch (state) {
-    case(PLAYING_LEVEL_START):
-      drawLevelStartInit();
-      break;
-    case(PLAYING_LEVEL_END):
-      drawLevelEndInit();
-      break;
-    }
-  }
+void Game::draw(CRGB leds[], State state, unsigned long elapsed) {
+  if(state == PLAYING_LEVEL_START && isFreshState())
+    server.playSound("sounds/spawn.wav");
 
   switch (state) {
   case(PLAYING_LEVEL_END):
@@ -168,7 +157,7 @@ void Game::drawDeath(unsigned long elapsed, CRGB leds[]) {
 
 void Game::drawLoseLife(unsigned long elapsed, CRGB leds[]) {
   if (lives == 0)
-    return updateState(GAME_OVER);
+    return setNextState(GAME_OVER);
 
   if (elapsed < 700)
     write(lives, leds);
@@ -176,18 +165,15 @@ void Game::drawLoseLife(unsigned long elapsed, CRGB leds[]) {
     write(lives - 1, leds);
   else {
     lives -= 1;
-    updateState(PLAYING_LEVEL_START);
+    setNextState(PLAYING_LEVEL_START);
     start(level->levelNum, true);
   }
 }
 
 void Game::drawLevelEndInit() {
-  Serial.println("LEVEL END");
-  Serial.println(prevScore);
   server.stopSong();
   prevScore = score;
   score += 100;
-  Serial.println(prevScore);
   if (levelTimer < LEVEL_TIME_BONUS)
     score += (LEVEL_TIME_BONUS - levelTimer) / 100;
 }
@@ -203,9 +189,9 @@ void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
     } else
       writeFixed5(score, leds);
   } else if (level->levelNum >= LEVEL_COUNT)
-    updateState(GAME_WIN);
+    setNextState(GAME_WIN);
   else {
-    updateState(PLAYING_LEVEL_START);
+    setNextState(PLAYING_LEVEL_START);
     start(level->levelNum + 1, false);
   }
 }
@@ -226,11 +212,12 @@ void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
     break;
   case FINISH:
     server.playSound("sounds/win.wav");
-    updateState(PLAYING_LEVEL_END);
+    setNextState(PLAYING_LEVEL_END);
+    drawLevelEndInit();
     break;
   case FIRE:
     server.playSound("sounds/death.wav");
-    updateState(PLAYING_DEATH);
+    setNextState(PLAYING_DEATH);
     break;
   case SLOW:
     server.playSound("sounds/slow.wav");
@@ -242,7 +229,6 @@ void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
     break;
   }
 }
-
 
 void Game::checkDiags(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (x == prevX || y == prevY) return;

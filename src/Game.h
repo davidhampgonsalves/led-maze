@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Level.h"
+#include "state.h"
 #include <FastLED.h>
 
 class Game{
@@ -8,7 +9,7 @@ class Game{
     Game();
     void updateAccel(double, double);
     void update(int elapsed);
-    void draw(CRGB leds[]);
+    void draw(CRGB leds[], State s, unsigned long elapsed);
     void start(int lvl, bool isRestart);
 
     double GRAVITY;

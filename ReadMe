@@ -4,10 +4,10 @@
 
 * spawn is kind of agressive
 * sometimes you can go through a square without triggering it?
-* final levels
-* more songs
+* final levels + final song
 * does win work?
-* does game over song play?
+
+* secret exit to bonus level? - hard code exit location and send you to different level
 
 * level end init gets called twice and causes the score count bug
 

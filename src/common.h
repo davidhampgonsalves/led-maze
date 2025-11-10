@@ -17,6 +17,7 @@ struct Pt {
 CRGB* getLed(int x, int y, CRGB leds[]);
 void setLed(int x, int y, CHSV c, CRGB leds[]);
 void setLed(int x, int y, CRGB c, CRGB leds[]);
+void setLedIfBlank(int x, int y, CRGB c, CRGB leds[]);
 int indexToPos(int xy);
 int posToIndex(unsigned long xy);
 int distanceBetween(int x, int y, int x2, int y2);
