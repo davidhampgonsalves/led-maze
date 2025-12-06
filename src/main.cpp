@@ -166,6 +166,7 @@ void highScore(unsigned long elapsed) {
 }
 
 void highScoreInit() {
+  server.playSong("music/highscore.wav");
   server.highScore(game.score);
 }
 

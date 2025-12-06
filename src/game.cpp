@@ -31,17 +31,18 @@ Game::Game() {
   SLOW_FRICTION = 0.02;
 }
 
-const char* SONGS[] = {
-  "music/sparky.wav",
-  "music/spooky.wav",
-  "music/slow.wav",
-  "music/choir.wav",
-  "music/fancy.wav",
-  "music/middling-carabana.wav",
+const char* LVL_SONGS[] = {
   "music/shannon.wav",
+  "music/glass-japan.wav",
+  "music/sparky.wav",
+  "music/slow.wav",
+  "music/middling-carabana.wav",
   "music/dark-and-light.wav",
+  "music/fancy.wav",
+  "music/choir.wav",
+  "music/spooky.wav",
+  "music/typical.wav",
 };
-const uint SONG_COUNT = 7;
 void Game::start(int lvl, bool isRestart) {
   level = new Level(lvl);
   accelX, accelY = 0;
@@ -62,7 +63,7 @@ void Game::start(int lvl, bool isRestart) {
 
   if(isRestart) return;
 
-  server.playSong(SONGS[lvl % SONG_COUNT]);
+  server.playSong(LVL_SONGS[lvl]);
 }
 
 void Game::updateAccel(double beta, double gamma) {
@@ -131,6 +132,7 @@ void Game::draw(CRGB leds[], State state, unsigned long elapsed) {
 
   level->draw(elapsed, leds);
 
+  // TODO: draw big ball
   setLed(x, y, BALL_COLOR, leds);
 
   switch (state) {
@@ -198,6 +200,13 @@ void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
 
 void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (x == prevX && y == prevY) return; // haven't entered new px
+
+  // TODO: fork off for big ball
+  // simplified outer bounds check
+  // fire check?
+  // finish check
+  // small check
+  // big check in normal fork
 
   int px = level->at(x, y);
   int prevPx = level->at(prevX, prevY);
