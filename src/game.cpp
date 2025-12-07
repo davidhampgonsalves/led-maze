@@ -16,7 +16,7 @@ const int GAME_MAX_X = 6000;
 const int GAME_MAX_Y = 50000;
 const double BOUNCE = 0.6;
 const int LEVEL_TIME_BONUS = 15000;
-const uint MAX_LIVES = 1;
+const uint MAX_LIVES = 3;
 
 static long prevScore;
 
@@ -60,10 +60,6 @@ void Game::start(int lvl, bool isRestart) {
 
   velX = 0;
   velY = 0;
-
-  if(isRestart) return;
-
-  server.playSong(LVL_SONGS[lvl]);
 }
 
 void Game::updateAccel(double beta, double gamma) {
@@ -120,8 +116,19 @@ void Game::update(int interval) {
 }
 
 void Game::draw(CRGB leds[], State state, unsigned long elapsed) {
-  if(state == PLAYING_LEVEL_START && isFreshState())
-    server.playSound("sounds/spawn.wav");
+  if(isFreshState())
+    switch (state) {
+    case(PLAYING_LEVEL_START):
+      server.playSound("sounds/spawn.wav");
+      break;
+    case(PLAYING):
+      server.playSong(LVL_SONGS[level->levelNum-1]);
+      break;
+    case(PLAYING_LOSE_LIFE):
+      server.stopSong();
+      server.playSound("sounds/lose-life.wav");
+      break;
+    }
 
   switch (state) {
   case(PLAYING_LEVEL_END):
@@ -132,7 +139,6 @@ void Game::draw(CRGB leds[], State state, unsigned long elapsed) {
 
   level->draw(elapsed, leds);
 
-  // TODO: draw big ball
   setLed(x, y, BALL_COLOR, leds);
 
   switch (state) {
@@ -200,13 +206,6 @@ void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
 
 void Game::checkCollisions(int prevX, int prevY, int prevPosX, int prevPosY) {
   if (x == prevX && y == prevY) return; // haven't entered new px
-
-  // TODO: fork off for big ball
-  // simplified outer bounds check
-  // fire check?
-  // finish check
-  // small check
-  // big check in normal fork
 
   int px = level->at(x, y);
   int prevPx = level->at(prevX, prevY);

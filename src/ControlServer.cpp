@@ -34,11 +34,6 @@ ControlServer::ControlServer() {
 }
 
 void ControlServer::playSong(const char* path) {
-  // const size_t len = measureJson(doc);
-  // AsyncWebSocketMessageBuffer* buffer = _ws->makeBuffer(len);
-  // serializeJson(doc, buffer->get(), len);
-  // ws->textAll(buffer);
-
   ws.printfAll("{\"type\":\"PLAY_SONG\",\"url\":\"%s\"}", path);
 }
 

@@ -26,7 +26,6 @@
 #define uS_TO_S_FACTOR 1000000ULL
 CRGB leds[NUM_LEDS];
 
-ScoreList scores;
 Level *titleLevel = NULL;
 Level *deadLevel = NULL;
 Level *winLevel = NULL;
@@ -51,23 +50,6 @@ void setup(){
   FastLED.clear();
   FastLED.show();
 
-  // SD.begin(10);
-  // File file = SD.open("/high-scores.txt", FILE_WRITE);
-  // file.println("aaa:1");
-  // file.println("bbb:2");
-  // file.println("ccc:3");
-  // file.close();
-
-  // readHighScores();
-
-  // writeHighScore("bbb", 100);
-  // writeHighScore("eek", 1212);
-  // writeHighScore("ccc", 50);
-  // writeHighScore("Mee", 560);
-  // writeHighScore("Loo", 750);
-  // Serial.printf("is 200 a high score? %d\n", isHighScore(200));
-  // Serial.printf("is 40 a high score? %d\n", isHighScore(40));
-
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
 
@@ -89,6 +71,9 @@ void setup(){
   rtc_gpio_pullup_dis(WAKEUP_GPIO);
 
   trackLastInput();
+
+  readHighScores();
+  Serial.printf("%s - %ld\n", hsName1, highScore1);
 }
 
 static uint32_t lastWS = 0;
@@ -170,15 +155,9 @@ void highScoreInit() {
   server.highScore(game.score);
 }
 
-void highScoresInit() {
-  scores = readHighScores();
-}
-
-static int scoreIndex = 0;
 void highScores(unsigned long elapsed) {
   if(elapsed < WORD_WAIT * 3) {
     if(elapsed < WORD_WAIT) {
-      scoreIndex = 0;
       write("hall", leds);
     } else if(elapsed < WORD_WAIT * 2)
       write("of", leds);
@@ -188,13 +167,14 @@ void highScores(unsigned long elapsed) {
     return;
   }
 
-  elapsed -= WORD_WAIT * 3 + (scoreIndex * WORD_WAIT_LONG * 2);
-  if(elapsed < WORD_WAIT_LONG) write(scores.scores[scoreIndex].name, leds);
-  else if(elapsed < WORD_WAIT_LONG * 2) write(scores.scores[scoreIndex].score, leds);
-  else {
-    scoreIndex += 1;
-    if(scoreIndex >= MAX_HIGHSCORES) setNextState(TITLE);
-  }
+  elapsed -= WORD_WAIT * 3;
+  if(elapsed < WORD_WAIT_LONG) write(hsName1, leds);
+  else if(elapsed < WORD_WAIT_LONG * 2) write(highScore1, leds);
+  else if(elapsed < WORD_WAIT_LONG * 3) write(hsName2, leds);
+  else if(elapsed < WORD_WAIT_LONG * 4) write(highScore2, leds);
+  else if(elapsed < WORD_WAIT_LONG * 5) write(hsName3, leds);
+  else if(elapsed < WORD_WAIT_LONG * 6) write(highScore3, leds);
+  else setNextState(TITLE);
 }
 
 void loop() {
@@ -220,9 +200,6 @@ void loop() {
         break;
       case HIGH_SCORE:
         highScoreInit();
-        break;
-      case HIGH_SCORES:
-        highScoresInit();
         break;
       case GAME_START:
         gameStartInit();
@@ -291,5 +268,4 @@ void loop() {
     esp_sleep_enable_timer_wakeup(300 * uS_TO_S_FACTOR);
     esp_deep_sleep_start();
   }
-  //Serial.printf("%lu - %lu\n", (getLastInputTime() + 30000000), millis());
 }

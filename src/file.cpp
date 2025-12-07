@@ -8,70 +8,67 @@
 const char* HIGH_SCORE_PATH = "/high-scores.txt";
 int MAX_CHARS_PER_LINE = 20;
 
-void sortScores(ScoreList& list) {
-    for (int i = 0; i < MAX_HIGHSCORES - 1; i++) {
-        for (int j = 0; j < MAX_HIGHSCORES - i - 1; j++) {
-            if (list.scores[j].score < list.scores[j + 1].score) {
-                HighScore temp = list.scores[j];
-                list.scores[j] = list.scores[j + 1];
-                list.scores[j + 1] = temp;
-            }
-        }
-    }
-}
+char hsName1[NAME_MAX_LEN];
+char hsName2[NAME_MAX_LEN];
+char hsName3[NAME_MAX_LEN];
+long highScore1;
+long highScore2;
+long highScore3;
 
+void readHighScores() {
+  File file = SD.open(HIGH_SCORE_PATH);
 
-ScoreList readHighScores() {
-    ScoreList list;
-    int scoreCount = 0;
+  int len = file.readBytesUntil(',', hsName1, NAME_MAX_LEN);
+  hsName1[len] = '\0';
+  highScore1 = file.parseInt();
+  file.read();
 
-    File file = SD.open(HIGH_SCORE_PATH);
-    char lineBuffer[MAX_CHARS_PER_LINE];
-    Serial.println("Read scores");
-    while (file.available() && scoreCount < MAX_HIGHSCORES) {
-        int bytesRead = file.readBytesUntil('\n', lineBuffer, MAX_CHARS_PER_LINE - 1);
-        lineBuffer[bytesRead] = '\0';
+  len = file.readBytesUntil(',', hsName2, NAME_MAX_LEN);
+  hsName2[len] = '\0';
+  highScore2 = file.parseInt();
+  file.read();
 
-        char* name_token = strtok(lineBuffer, ":");
-        char* score_token = strtok(NULL, ":");
+  len = file.readBytesUntil(',', hsName3, NAME_MAX_LEN);
+  hsName3[len] = '\0';
+  highScore3 = file.parseInt();
 
-        strncpy(list.scores[scoreCount].name, name_token, NAME_MAX_LEN - 1);
-        list.scores[scoreCount].name[NAME_MAX_LEN - 1] = '\0';
-        list.scores[scoreCount].score = atol(score_token);
-
-        Serial.printf("  %d %s %ld\n", scoreCount, list.scores[scoreCount].name, list.scores[scoreCount].score);
-
-        scoreCount++;
-    }
-    file.close();
-
-    return list;
+  file.close();
 }
 
 bool isHighScore(long score) {
-  return score > readHighScores().scores[MAX_HIGHSCORES - 1].score;
+  return score > highScore3;
 }
 
 void writeHighScore(char* name, long score) {
-    ScoreList list = readHighScores();
+    char buffer[20];
 
-    strncpy(list.scores[MAX_HIGHSCORES - 1].name, name, NAME_MAX_LEN - 1);
-    list.scores[MAX_HIGHSCORES - 1].name[NAME_MAX_LEN - 1] = '\0';
-    list.scores[MAX_HIGHSCORES - 1].score = score;
-
-    Serial.printf("added high score %s %ld\n", list.scores[MAX_HIGHSCORES - 1].name, list.scores[MAX_HIGHSCORES - 1].score);
-    sortScores(list);
-
-    File file = SD.open(HIGH_SCORE_PATH, FILE_WRITE);
-    if (file) {
-        for (int i = 0; i < MAX_HIGHSCORES; i++) {
-            Serial.printf("writing high score: %s %ld\n", list.scores[i].name, list.scores[i].score);
-            file.print(list.scores[i].name);
-            file.print(':');
-            file.println(list.scores[i].score);
-        }
-        file.close();
+    File file = SD.open("highscores.txt");
+    if(score > highScore1) {
+      sprintf(buffer, "%s,%ld", name, score);
+      file.println(buffer);
+      sprintf(buffer, "%s,%ld", hsName1, highScore1);
+      file.println(buffer);
+      sprintf(buffer, "%s,%ld", hsName2, highScore2);
+      file.println(buffer);
+    } else if(score > highScore2) {
+      sprintf(buffer, "%s,%ld", hsName1, highScore1);
+      file.println(buffer);
+      sprintf(buffer, "%s,%ld", name, score);
+      file.println(buffer);
+      sprintf(buffer, "%s,%ld", hsName2, highScore2);
+      file.println(buffer);
+    } else {
+      sprintf(buffer, "%s,%ld", hsName1, highScore1);
+      file.println(buffer);
+      sprintf(buffer, "%s,%ld", hsName2, highScore2);
+      file.println(buffer);
+      sprintf(buffer, "%s,%ld", name, score);
+      file.println(buffer);
     }
+
+    file.close();
+
+    readHighScores();
 }
 
 void readFile(const char* path, char* out) {
@@ -85,28 +82,5 @@ void readFile(const char* path, char* out) {
 }
 
 void initSd() {
-  if(!SD.begin(5)){
-    Serial.println("Card Mount Failed");
-    return;
-  }
-  uint8_t cardType = SD.cardType();
-
-  if(cardType == CARD_NONE){
-    Serial.println("No SD card attached");
-    return;
-  }
-
-  Serial.print("SD Card Type: ");
-  if(cardType == CARD_MMC){
-    Serial.println("MMC");
-  } else if(cardType == CARD_SD){
-    Serial.println("SDSC");
-  } else if(cardType == CARD_SDHC){
-    Serial.println("SDHC");
-  } else {
-    Serial.println("UNKNOWN");
-  }
-
-  uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-  Serial.printf("SD Card Size: %lluMB\n", cardSize);
+  if(!SD.begin(5)) Serial.println("Card Mount Failed");
 }

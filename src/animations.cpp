@@ -36,7 +36,7 @@ void racingAnimationInit(CRGB* leds) {
   nextAnimationFrameAt = 0;
 
   for (int y = 0; y < MAX_Y ; y++) {
-    if(random(10) > 5) setLed(random(6), y, STAR_COLOR, leds);
+    if(random(10) > 7) setLed(random(6), y, STAR_COLOR, leds);
   }
 }
 
