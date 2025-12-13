@@ -19,6 +19,7 @@ enum State {
 };
 
 void setNextState(State s);
+void resetState();
 void transitionState();
 unsigned long getStateStart();
 bool isFreshState();

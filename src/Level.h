@@ -21,8 +21,4 @@ class Level {
     int levelNum;
     int startX;
     int startY;
-
-  private:
-    CRGB level[MAX_X * MAX_Y];
-    char data[10000]; // todo: can be 2k
 };

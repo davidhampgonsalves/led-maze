@@ -31,8 +31,10 @@ Level *deadLevel = NULL;
 Level *winLevel = NULL;
 
 uint8_t settingsBrightness;
+unsigned long startTime;
+bool goingToSleep;
 
-void setup(){
+void setup() {
   Serial.begin(115200);
   Serial.println("Starting up.");
   Serial.println(ESP.getFreeHeap());
@@ -70,10 +72,17 @@ void setup(){
   rtc_gpio_pulldown_en(WAKEUP_GPIO);
   rtc_gpio_pullup_dis(WAKEUP_GPIO);
 
+  pinMode(WAKEUP_GPIO, INPUT);
+
   trackLastInput();
 
+  startTime = millis();
+
   readHighScores();
-  Serial.printf("%s - %ld\n", hsName1, highScore1);
+
+  goingToSleep = false;
+
+  resetState();
 }
 
 static uint32_t lastWS = 0;
@@ -263,7 +272,12 @@ void loop() {
   FastLED.show();
   prev = now;
 
-  if((getLastInputTime() + 300000) < millis()) {
+  int buttonState = digitalRead(WAKEUP_GPIO);
+  // need to wait for button press to complete before we sleep or else still pressed button winLevel
+  // trigger an imediate wake up.
+  if(startTime - now > 1000 && buttonState == HIGH) goingToSleep = true;
+
+  if((getLastInputTime() + 300000) < now || (goingToSleep && buttonState == LOW)) {
     Serial.flush();
     esp_sleep_enable_timer_wakeup(300 * uS_TO_S_FACTOR);
     esp_deep_sleep_start();

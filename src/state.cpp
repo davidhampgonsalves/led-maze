@@ -32,3 +32,8 @@ void trackLastInput() {
 unsigned long getLastInputTime() {
   return lastInputTime;
 }
+
+void resetState() {
+  cur = START_UP;
+  next = START_UP;
+}

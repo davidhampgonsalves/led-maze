@@ -42,7 +42,7 @@ bool isHighScore(long score) {
 void writeHighScore(char* name, long score) {
     char buffer[20];
 
-    File file = SD.open("highscores.txt");
+    File file = SD.open(HIGH_SCORE_PATH);
     if(score > highScore1) {
       sprintf(buffer, "%s,%ld", name, score);
       file.println(buffer);

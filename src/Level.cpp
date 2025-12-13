@@ -9,6 +9,9 @@
 #include <math.h>
 #include <Game.h>
 
+
+CRGB levelData[MAX_X * MAX_Y];
+
 Level::Level(int num) {
   levelNum = num;
   char path[15];
@@ -22,6 +25,7 @@ Level::Level(const char* path) {
 }
 
 void Level::load(const char* path) {
+  char data[2000];
   readFile(path, data);
 
   int headerOffset = static_cast<int>(data[10]);
@@ -37,7 +41,7 @@ void Level::load(const char* path) {
       if(c == START_RGB)
         startX = x, startY = y;
 
-      level[x * MAX_Y + y] = c;
+      levelData[x * MAX_Y + y] = c;
 
       if (x == MAX_X - 1) {
         dataIndex += 2; // skip padding: 6 pixels * 3 bytes to a multiple of 4
@@ -55,7 +59,7 @@ void Level::draw(unsigned long elapsed, CRGB leds[]) {
       Px px = at(x, y);
       if(px == EMPTY) continue;
 
-      CRGB c = colorAt(x, y, level);
+      CRGB c = colorAt(x, y, levelData);
       bool hidden = isHidden(c);
       int distanceToPlayer = -1;
       if(hidden) {
@@ -86,7 +90,7 @@ bool Level::isHidden(CRGB c) {
 }
 
 Px Level::at(int x, int y) {
-  CRGB c = colorAt(x, y, level);
+  CRGB c = colorAt(x, y, levelData);
 
   if (c == EMPTY_RGB || c == START_RGB)
     return EMPTY;
@@ -103,7 +107,7 @@ Px Level::at(int x, int y) {
 }
 
 bool Level::isPx(int x, int y, Px px) {
-  CRGB c = colorAt(x, y, level);
+  CRGB c = colorAt(x, y, levelData);
   if(px == BREAKABLE_WALL && c == BREAKABLE_WALL_RGB)
     return true;
   else if(px == SLOW && c == SLOW_RGB)
@@ -113,5 +117,5 @@ bool Level::isPx(int x, int y, Px px) {
 }
 
 void Level::breakPx(int x, int y) {
-  level[x * MAX_Y + y] = BLACK;
+  levelData[x * MAX_Y + y] = BLACK;
 }

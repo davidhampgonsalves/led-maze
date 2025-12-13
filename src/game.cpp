@@ -167,14 +167,14 @@ void Game::drawLoseLife(unsigned long elapsed, CRGB leds[]) {
   if (lives == 0)
     return setNextState(GAME_OVER);
 
-  if (elapsed < 700)
+  if (elapsed < 1000)
     write(lives, leds);
-  else if (elapsed < 1500)
+  else if (elapsed < 2500)
     write(lives - 1, leds);
   else {
     lives -= 1;
-    setNextState(PLAYING_LEVEL_START);
     start(level->levelNum, true);
+    setNextState(PLAYING_LEVEL_START);
   }
 }
 
