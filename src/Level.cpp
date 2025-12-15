@@ -1,5 +1,4 @@
 #include <Arduino.h>
-// #include <vector>
 #include <FastLED.h>
 #include <cmath>
 #include "Level.h"

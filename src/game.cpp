@@ -187,7 +187,9 @@ void Game::drawLevelEndInit() {
 }
 
 void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
-  if (elapsed < 4000) {
+  if (level->levelNum >= LEVEL_COUNT)
+    setNextState(RAINBOW_ANIMATION);
+  else if (elapsed < 4000) {
     if(elapsed < 700)
       writeFixed5(prevScore, leds);
     else if (elapsed < 1700) {
@@ -196,9 +198,7 @@ void Game::drawLevelEnd(unsigned long elapsed, CRGB leds[]) {
       writeFixed5(countUp, leds);
     } else
       writeFixed5(score, leds);
-  } else if (level->levelNum >= LEVEL_COUNT)
-    setNextState(RAINBOW_ANIMATION);
-  else {
+  } else {
     setNextState(PLAYING_LEVEL_START);
     start(level->levelNum + 1, false);
   }

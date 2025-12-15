@@ -88,6 +88,7 @@ void rainbowAnimationInit() {
   dirRight = true;
   ballY = 0;
   posX = 0;
+  nextAnimationFrameAt = 0;
 }
 
 void drawRainbowRows(int startY, int offset, CRGB* leds) {
@@ -108,7 +109,7 @@ void rainbowAnimation(unsigned long elapsed, CRGB* leds) {
 
   nextAnimationFrameAt = elapsed + 50;
 
-  if(ballY > MAX_Y+45) setNextState(GAME_WIN);
+  if(ballY > MAX_Y+35) setNextState(GAME_WIN);
 
   ballY++;
 
@@ -131,7 +132,6 @@ void rainbowAnimation(unsigned long elapsed, CRGB* leds) {
     if(offset >= 2) offsetDirRight = false;
     offset += offsetDirRight ? 1 : -1;
 
-    // Serial.printf("y: %d, posX: %d, offset: %d\n", y, posX, offset);
     drawRainbowRows(y, offset, leds);
   }
 }

@@ -5,6 +5,7 @@
 #include "driver/rtc_io.h"
 #include "FS.h"
 #include "SD.h"
+#include <SPI.h>
 
 #include "ControlServer.h"
 #include "Game.h"
@@ -14,6 +15,7 @@
 #include "animations.h"
 #include "settings.h"
 #include "file.h"
+#include "screen.h"
 
 #define DEBUG false
 
@@ -26,9 +28,9 @@
 #define uS_TO_S_FACTOR 1000000ULL
 CRGB leds[NUM_LEDS];
 
-Level *titleLevel = NULL;
-Level *deadLevel = NULL;
-Level *winLevel = NULL;
+Screen *titleScreen = NULL;
+Screen *deadScreen = NULL;
+Screen *winScreen = NULL;
 
 uint8_t settingsBrightness;
 unsigned long startTime;
@@ -39,8 +41,6 @@ void setup() {
   Serial.println("Starting up.");
   Serial.println(ESP.getFreeHeap());
 
-  initSd();
-
   server.connect();
   Serial.println("Server is connected.");
 
@@ -49,15 +49,24 @@ void setup() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);  // GRB ordering is assumed
   FastLED.setTemperature(0xFF7029);
 
-  FastLED.clear();
-  FastLED.show();
-
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
 
-  titleLevel = new Level("/screens/title.bmp");
-  deadLevel = new Level("/screens/death.bmp");
-  winLevel = new Level("/screens/win.bmp");
+  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV128);
+
+  while(!SD.begin(5)) {
+    Serial.println("Card Mount Failed");
+    setLed(0, 0, FIRE_RGB, leds);
+    FastLED.show();
+  }
+
+  FastLED.clear();
+  FastLED.show();
+
+  titleScreen = new Screen("/screens/title.bmp");
+  deadScreen = new Screen("/screens/death.bmp");
+  winScreen = new Screen("/screens/win.bmp");
   Serial.println("title read complete.");
 
   Serial.println("Start up complete.");
@@ -77,6 +86,13 @@ void setup() {
   trackLastInput();
 
   startTime = millis();
+
+  // RESET HIGH SCORES
+  // File file = SD.open("/high-scores.txt", FILE_WRITE);
+  // file.println("one,100");
+  // file.println("two,75");
+  // file.println("tri,50");
+  // file.close();
 
   readHighScores();
 
@@ -102,12 +118,6 @@ void gameStart(unsigned long elapsed) {
   }
 }
 
-void gameEndInit() {
-  server.stopSong();
-  server.playSound("sounds/game-end.wav");
-  server.win();
-}
-
 void gameEnd(unsigned long elapsed) {
   if(elapsed > 5000) {
     if(isHighScore(game.score))
@@ -116,8 +126,12 @@ void gameEnd(unsigned long elapsed) {
       setNextState(TITLE);
   }
 
-  winLevel->update(0);
-  winLevel->draw(elapsed, leds);
+  winScreen->draw(elapsed, leds);
+}
+
+void gameOverInit() {
+  server.stopSong();
+  server.playSound("sounds/game-over.wav");
 }
 
 void gameOver(unsigned long elapsed) {
@@ -128,21 +142,13 @@ void gameOver(unsigned long elapsed) {
       setNextState(TITLE);
   }
 
-  deadLevel->update(0);
-  deadLevel->draw(elapsed, leds);
-}
-
-void gameOverInit() {
-  server.stopSong();
-  server.playSound("sounds/game-over.wav");
-  server.death();
+  deadScreen->draw(elapsed, leds);
 }
 
 void title(unsigned long elapsed) {
-  if(elapsed < 5000) {
-    titleLevel->update(0);
-    titleLevel->draw(elapsed, leds);
-  } else
+  if(elapsed < 5000)
+    titleScreen->draw(elapsed, leds);
+  else
     setNextState(RACING_ANIMATION);
 }
 
@@ -150,7 +156,6 @@ void titleInit() {
   server.playSong("music/title.wav");
   server.welcome();
 }
-
 
 void highScore(unsigned long elapsed) {
     if(elapsed % (WORD_WAIT * 2) < WORD_WAIT)
@@ -177,6 +182,7 @@ void highScores(unsigned long elapsed) {
   }
 
   elapsed -= WORD_WAIT * 3;
+
   if(elapsed < WORD_WAIT_LONG) write(hsName1, leds);
   else if(elapsed < WORD_WAIT_LONG * 2) write(highScore1, leds);
   else if(elapsed < WORD_WAIT_LONG * 3) write(hsName2, leds);
@@ -213,9 +219,6 @@ void loop() {
       case GAME_START:
         gameStartInit();
         break;
-      case GAME_WIN:
-        gameEndInit();
-        break;
       case GAME_OVER:
         gameOverInit();
         break;
@@ -223,6 +226,9 @@ void loop() {
         racingAnimationInit(leds);
         break;
       case RAINBOW_ANIMATION:
+        server.stopSong();
+        server.playSound("sounds/game-end.wav");
+
         rainbowAnimationInit();
         break;
     }
@@ -273,13 +279,14 @@ void loop() {
   prev = now;
 
   int buttonState = digitalRead(WAKEUP_GPIO);
-  // need to wait for button press to complete before we sleep or else still pressed button winLevel
+  // need to wait for button press to complete before we sleep or else still pressed button will
   // trigger an imediate wake up.
   if(startTime - now > 1000 && buttonState == HIGH) goingToSleep = true;
 
   if((getLastInputTime() + 300000) < now || (goingToSleep && buttonState == LOW)) {
     Serial.flush();
-    esp_sleep_enable_timer_wakeup(300 * uS_TO_S_FACTOR);
+    int sleepDur = random(60*60, 6*60*60);
+    esp_sleep_enable_timer_wakeup(sleepDur * uS_TO_S_FACTOR);
     esp_deep_sleep_start();
   }
 }

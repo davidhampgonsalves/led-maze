@@ -58,16 +58,7 @@ void ControlServer::welcome() {
   ws.printfAll("{\"type\":\"WELCOME\"}");
 }
 
-void ControlServer::death() {
-  ws.printfAll("{\"type\":\"DEATH\"}");
-}
-
-void ControlServer::win() {
-  ws.printfAll("{\"type\":\"WIN\"}");
-}
-
 void ControlServer::connect() {
-  // Connect to Wi-Fi
   IPAddress local_IP(192, 168, 1, 184);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -75,18 +66,9 @@ void ControlServer::connect() {
     Serial.println("Connecting to WiFi..");
   }
 
-  // Print ESP32 Local IP Address
   Serial.println(WiFi.localIP());
 
-  // readFile("/index.html", indexData);
-
-  // Route for root / web page
   webServer.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
-    // request->send(200, "text/html", indexData);
-    if(!SD.begin(5)){
-      Serial.println("Card Mount Failed");
-      return;
-    }
     request->send(SD, "/index.html", "text/html; charset=utf-8");
     trackLastInput();
   });
@@ -111,12 +93,6 @@ void ControlServer::connect() {
     strcpy(msgBuff, (const char *)data);
 
     char* type = strtok(msgBuff, ":");
-    // Serial.printf("type: %s\n", type);
-
-    // std::string msg((const char *)data);
-    // int typePos = msg.find(':');
-    // std::string type = msg.substr(0, typePos);
-
 
     if(strcmp(type, "start") == 0) {
       setNextState(GAME_START);
@@ -131,6 +107,8 @@ void ControlServer::connect() {
       char* name = strtok(NULL, ",");
 
       for (int j = 0; name[j] != '\0'; j++) { name[j] = tolower(name[j]); }
+
+      Serial.printf("writing high score %s %ld\n", name, score);
 
       writeHighScore(name, score);
       setNextState(HIGH_SCORES);

@@ -72,7 +72,7 @@
           height: 28px; /* Example thumb size */
           width: 16px;
           margin-top: -4px; /* Adjust to center vertically on the track */
-      }
+        }
 
         .cursor {
           display: inline-block;
@@ -97,6 +97,11 @@
           top: 140px;
           left: 210px;
           font-size: 1.2em;
+          display: none;
+        }
+
+        #tracks a {
+          color: #00ff00;
         }
 
         input#name {
@@ -142,6 +147,11 @@
       <script>
         const MUSIC_PATHS = ["title", "choir", "sparky", "spooky", "slow", "middling-carabana", "dark-and-light", "shannon", "fancy", "highscore", "typical", "glass-japan"];
         const SOUND_PATHS = ["sm-bounce", "bounce", "death", "portal", "slow", "count", "get-ready", "spawn", "game-end", "game-over", "lose-life", "win"];
+
+        const LOADING_CONTENT = `
+
+
+                  LOADING...`;
 
         const INTRO_CONTENT = `
      ███╗   ███╗ █████╗ ███████╗███████╗
@@ -247,11 +257,14 @@ Can you escape the dungeon fast enough to be imortalized in the hall of fame or 
           ║<input type="range" id="brightness" value=30 />║
           ║                        ║
           ╚════════════════════════╝
-</span>
 
 
+              **    MUSIC   **
+  <span id=tracks>
+            ${[0,1,2,3,4,5].map((i) => `<a href="#">${i+1}</a>`).join(" - ")}
 
-
+           ${[6,7,8,9,10,11].map((i) => `<a href="#">${i+1}</a>`).join(" - ")}
+  </span>
 
 <span id=back>
               ╔═══════════════╗
@@ -265,6 +278,8 @@ Can you escape the dungeon fast enough to be imortalized in the hall of fame or 
 const PLAY_CONTENT = `
 
 <div id=play>
+Tilt your phone to move your marble.
+
 ╔═══════════════════════════════════╗
 ║                                   ║
 ║                                   ║
@@ -326,45 +341,6 @@ const HIGH_SCORE_CONTENT = `
 
                                           `;
 
-const DEATH_CONTENT = `
-
-
-
-
-            ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-         ▒▒▒▒▒▒          ▒▒▒▒▒▒
-       ▒▒▒▒                  ▒▒▒▒
-     ▒▒▒▒                      ▒▒▒▒
-    ▒▒▒                          ▒▒▒
-   ▒▒▒                            ▒▒▒
-  ▒▒▒       ▒▒▒▒        ▒▒▒▒       ▒▒▒
- ▒▒▒       ▒▒▒▒▒▒      ▒▒▒▒▒▒▒      ▒▒▒
- ▒▒      ▒▒▒▒▒▒▒▒▒     ▒▒▒▒▒▒▒▒      ▒▒
-▒▒▒      ▒▒▒▒▒▒▒▒      ▒▒▒▒▒▒▒▒      ▒▒▒
-▒▒▒        ▒▒▒▒▒        ▒▒▒▒▒        ▒▒▒
- ▒▒                ▒▒                ▒▒
- ▒▒▒              ▒▒▒▒              ▒▒▒
-  ▒▒▒                              ▒▒▒
-   ▒▒▒▒                          ▒▒▒
-     ▒▒▒▒▒                    ▒▒▒▒▒
-        ▒▒      ▒      ▒      ▒▒
-        ▒▒      ▒      ▒      ▒▒
-        ▒▒▒▒    ▒▒    ▒▒    ▒▒▒▒
-          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-
-
-
-                                          `;
-const WIN_CONTENT = `
-
-
-
-
-                TODO: WIN ANIMATION
-
-
-
-                                          `;
       </script>
 
       <script>
@@ -423,7 +399,7 @@ const WIN_CONTENT = `
 
               if(index >= content.length + (options.flicker ? 200 : 0)) {
                 contentEl.innerHTML = content
-                initFn();
+                initFn && initFn();
               } else
                 animate();
             });
@@ -522,7 +498,6 @@ const WIN_CONTENT = `
         }
 
         let lastSendTime = 0;
-        let posEl = null;
         function handleOrientationEvent(event) {
           const { beta, gamma } = event;
           if(beta == null) {
@@ -533,12 +508,16 @@ const WIN_CONTENT = `
           const now = Date.now();
           if (now - lastSendTime >= 250) {
             lastSendTime = now;
-            console.log("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
             websocket.send("pos:" + event.beta.toFixed(2) + "," + event.gamma.toFixed(2));
 
-            if(!posEl) posEl = document.querySelector("#play span");
-            posEl.style.top = 140 + (beta / 90 * 95) + "px";
-            posEl.style.left = 210 + (gamma / 90 * 115) + "px";
+            const playEl = document.querySelector("#play");
+            let centerX = (playEl.clientWidth / 2)
+            let centerY = (playEl.clientHeight / 2) + 30;
+
+            const posEl = document.querySelector("#play span");
+            posEl.style.display = 'inline';
+            posEl.style.top = Math.round(centerX + (beta / 90 * 95)) + "px";
+            posEl.style.left = Math.round(centerY + (gamma / 90 * 95)) + "px";
           }
         }
 
@@ -592,9 +571,14 @@ const WIN_CONTENT = `
             document.querySelector("#back").addEventListener("click", welcome);
             document.querySelector("#brightness").addEventListener("input", (event) => {
               const brightness =  event.target.value;
-              console.log("sending brightness " + brightness);
               websocket.send(`brightness:${brightness}`);
             });
+
+            document.querySelectorAll("#tracks a").forEach((e) => e.addEventListener("click", (e) => {
+              const allChildren = Array.from(e.target.parentNode.children);
+              const index = allChildren.indexOf(e.target);
+              playSong(`music/${MUSIC_PATHS[index]}.wav`, true);
+            }));
           });
         }
 
@@ -603,18 +587,8 @@ const WIN_CONTENT = `
           display("INTRO", INTRO_CONTENT, () => {}, { flicker: true, frameDelay: 8 });
         }
 
-        function death() {
+        function end() {
           window.removeEventListener('deviceorientation', handleOrientationEvent);
-
-          display("DEATH", DEATH_CONTENT, () => {}, { flicker: true, frameDelay: 8 });
-
-          window.setTimeout(welcome, 3000);
-        }
-
-        function win() {
-          window.removeEventListener('deviceorientation', handleOrientationEvent);
-          display("WIN", WIN_CONTENT, () => {}, { flicker: true, frameDelay: 8 });
-
           window.setTimeout(welcome, 3000);
         }
 
@@ -688,28 +662,34 @@ const WIN_CONTENT = `
 
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const soundBuffers = {};
-        function preloadSounds() {
-          MUSIC_PATHS.forEach(async path => {
+        function preloadSounds(callback) {
+          const musicPromises = MUSIC_PATHS.map(async path => {
             const url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/music/" + path + ".wav";
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
             soundBuffers[url] = await audioContext.decodeAudioData(arrayBuffer);
           })
-          SOUND_PATHS.forEach(async path => {
+          const soundPromises = SOUND_PATHS.map(async path => {
             const url = "https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/sounds/" + path + ".wav";
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
             soundBuffers[url] = await audioContext.decodeAudioData(arrayBuffer);
-          })
+          });
+
+          Promise.all(musicPromises.concat(soundPromises)).then(callback);
         }
 
         function stopSong() {
           if(song) song.disconnect();
         }
 
-        preloadSounds();
-        initWebSocket();
-        intro();
+        const loadingTimeout = window.setTimeout(() => display("LOADING", LOADING_CONTENT), 500);
+        preloadSounds(() => {
+          window.clearTimeout(loadingTimeout);
+          intro();
+          initWebSocket();
+        });
+
         initConsole();
       </script>
       <audio id="music" src="https://raw.githubusercontent.com/davidhampgonsalves/led-maze/main/sounds/count.wav"></audio>

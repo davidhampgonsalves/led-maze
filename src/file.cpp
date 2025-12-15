@@ -15,20 +15,29 @@ long highScore1;
 long highScore2;
 long highScore3;
 
+void skipWhitespace(File &file) {
+  while (file.available() && file.peek() <= ' ') {
+    file.read();
+  }
+}
+
 void readHighScores() {
   File file = SD.open(HIGH_SCORE_PATH);
 
-  int len = file.readBytesUntil(',', hsName1, NAME_MAX_LEN);
+  int len = file.readBytesUntil(',', hsName1, NAME_MAX_LEN - 1);
   hsName1[len] = '\0';
-  highScore1 = file.parseInt();
-  file.read();
 
-  len = file.readBytesUntil(',', hsName2, NAME_MAX_LEN);
+  highScore1 = file.parseInt();
+
+  skipWhitespace(file);
+
+  len = file.readBytesUntil(',', hsName2, NAME_MAX_LEN - 1);
   hsName2[len] = '\0';
   highScore2 = file.parseInt();
-  file.read();
 
-  len = file.readBytesUntil(',', hsName3, NAME_MAX_LEN);
+  skipWhitespace(file);
+
+  len = file.readBytesUntil(',', hsName3, NAME_MAX_LEN - 1);
   hsName3[len] = '\0';
   highScore3 = file.parseInt();
 
@@ -42,7 +51,7 @@ bool isHighScore(long score) {
 void writeHighScore(char* name, long score) {
     char buffer[20];
 
-    File file = SD.open(HIGH_SCORE_PATH);
+    File file = SD.open(HIGH_SCORE_PATH, FILE_WRITE);
     if(score > highScore1) {
       sprintf(buffer, "%s,%ld", name, score);
       file.println(buffer);
@@ -79,8 +88,4 @@ void readFile(const char* path, char* out) {
   }
   out[i] = '\0';
   file.close();
-}
-
-void initSd() {
-  if(!SD.begin(5)) Serial.println("Card Mount Failed");
 }
